@@ -1,74 +1,92 @@
-# go-loop
+# spec-loop
 
-A portable Claude Code skill that turns a **claude.ai/design** project into a spec-driven,
-implemented, and **QA-gated** feature — and auto-iterates until a panel of QA agents all pass.
+Two portable Claude Code skills for **spec-driven, QA-gated, autonomous loops** — sharing one
+QA-agent panel and one installer. Built on [Spec Kit](https://github.com/github/spec-kit).
+
+| Skill | Input | Loops until |
+|-------|-------|-------------|
+| **`/go-loop`** | a **claude.ai/design** project | a 6-agent QA panel passes for the feature (max 10 iterations) |
+| **`/refactor-loop`** | the **codebase itself** | a re-audit finds no Critical/High refactors left and all gates are green |
+
+Both chain the individual `speckit-*` skills (`specify → … → implement`), then gate the result with
+the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings. On failure,
+`ultrathink-debugger` turns the findings into the next iteration's plan.
+
+## `/go-loop` — design → feature
 
 ```
-/go-loop <claude-design project name or uuid> — <one-line intent of what to build>
+/go-loop <claude-design project name or uuid> — <one-line intent>
 ```
+Pulls the design (read-only, via `DesignSync`), generates `spec.md` (speckit `specify` + `clarify`),
+renders the design as the visual spec, **stops for your approval**, then runs
+`plan → tasks → analyze → checklist → implement → QA-gates`, looping until the panel passes.
+Verifies design **and animation** parity (keyframe + behavior checklist).
 
-It runs in three stages:
+## `/refactor-loop` — codebase → cleaner codebase
 
-1. **Ingest** — pull the design (read-only, via the `DesignSync` tool) and decide which feature it maps to.
-2. **Spec + review gate** — generate `spec.md` (speckit `specify` + `clarify`), capture the rendered design as the visual spec, then **stop for your approval**.
-3. **Autonomous QA loop** — on approval, run `plan → tasks → analyze → checklist → implement → gates`. If the 6-agent QA panel doesn't all pass, hand the findings to `ultrathink-debugger`, fold its remediation brief into the next `plan`, and loop — **max 10 iterations**.
-
-A gate **passes** only with **0 Critical / 0 High / 0 Medium** findings.
+```
+/refactor-loop [optional scope: path / package / theme]
+```
+Analyzes the code and defines the **target organization** (from the constitution + CLAUDE.md +
+dominant patterns), audits it into a prioritized **backlog**, then **autonomously** refactors each
+item through the speckit workflow, QA-gates it (behavior-preservation centric), commits it on a
+`refactor-loop/*` review branch, and **re-audits** until nothing Critical/High remains. Never pushes
+or merges to main/dev — you review the integration branch.
 
 ## What's in here
 
 ```
-agents/              # 7 QA subagents (from github.com/darcyegb/ClaudeCodeAgents)
-skills/go-loop/      # the skill (SKILL.md) + resources/ (pass-matrix, render helper, templates, config example)
-install.sh           # installs the above into a target project + stamps its gate commands
+agents/              # 7 QA subagents (shared by both skills)
+skills/go-loop/      # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs, templates, config example)
+skills/refactor-loop/# SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
+install.sh           # installs both skills + the agents into a target, stamping its gate commands
 ```
 
-The 6 gate agents — `Jenny` (spec compliance), `claude-md-compliance-checker`, `code-quality-pragmatist`,
-`karen` (reality check), `task-completion-validator`, `ui-comprehensive-tester` (UI + design/animation parity) —
-plus `ultrathink-debugger`, which synthesizes failing findings into the next plan iteration.
+The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-checker`,
+`code-quality-pragmatist`, `karen` (reality check), `task-completion-validator`,
+`ui-comprehensive-tester` — plus `ultrathink-debugger` (the failure-time fixer).
 
 ## Prerequisites (on the target project)
 
-- **Spec Kit** — `.specify/` + the `speckit-*` skills. go-loop is a thin orchestrator over them.
+- **Spec Kit** — `.specify/` + the `speckit-*` skills. Both skills orchestrate these.
   Init with: `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
-- **Design access** — the `DesignSync` tool / claude.ai login (run `/design-login` once if needed).
-- **Playwright** *(web only)* — for rendering the HTML design reference and driving web parity.
-  Not needed for mobile-only projects (they use Mobile MCP / Flutter integration screenshots).
+- **Design access** *(go-loop only)* — the `DesignSync` tool / claude.ai login (`/design-login`).
+- **Playwright** *(go-loop, web surfaces only)* — for rendering the design reference + web parity.
+  Mobile / refactor work doesn't need it.
 
 ## Install
 
 ```bash
 # from anywhere:
-~/Documents/go-loop/install.sh /path/to/your/project
+~/Documents/spec-loop/install.sh /path/to/your/project
 
 # or from inside the target:
-cd /path/to/your/project && ~/Documents/go-loop/install.sh
+cd /path/to/your/project && ~/Documents/spec-loop/install.sh
 ```
 
 The installer auto-detects the surface (web / mobile / both) and gate commands (Makefile targets →
-melos → flutter / npm), then writes `.claude/skills/go-loop/resources/project.config.md` with them.
-Override anything:
+melos → flutter / npm), then writes `.claude/skills/<skill>/resources/project.config.md` into each
+skill. Override anything:
 
 ```bash
 install.sh /path/to/project --surface mobile --analyze-cmd "make analyze" --test-cmd "make test"
-install.sh /path/to/project --with-playwright      # bootstrap Playwright into the skill (any project)
+install.sh /path/to/project --with-playwright      # bootstrap Playwright into go-loop (any project)
 install.sh /path/to/project --force                # overwrite files that differ
 install.sh /path/to/project --agents-global        # agents → ~/.claude/agents (shared across projects)
 ```
 
-After installing, **reload Claude Code** in the target so `/go-loop` and the agents register.
+After installing, **reload Claude Code** in the target so `/go-loop`, `/refactor-loop`, and the
+agents register.
 
 ### Remote install (no local checkout)
 
-Clone-to-cache and run in one line — uses your existing git/GitHub auth, so it works on the
-private repo. Re-running updates the cache first, so this doubles as the update command:
+Clone-to-cache and run in one line — uses your existing git/GitHub auth, so it works on the private
+repo. Re-running updates the cache first, so this doubles as the update command:
 
 ```bash
-{ [ -d ~/.go-loop ] && git -C ~/.go-loop pull -q || gh repo clone ker0beros/go-loop ~/.go-loop; } \
-  && ~/.go-loop/install.sh "$PWD"
+{ [ -d ~/.spec-loop ] && git -C ~/.spec-loop pull -q || gh repo clone ker0beros/spec-loop ~/.spec-loop; } \
+  && ~/.spec-loop/install.sh "$PWD"
 ```
-
-Pass a target + flags as usual, e.g. `~/.go-loop/install.sh /path/to/project --surface mobile`.
 
 > A bare `curl … install.sh | bash` is **not** offered: the repo is private (the raw URL needs a
 > token) and the installer needs the bundled `agents/` + `skills/` beside it, which a piped script
@@ -76,14 +94,15 @@ Pass a target + flags as usual, e.g. `~/.go-loop/install.sh /path/to/project --s
 
 ## Per-project config
 
-`install.sh` generates `resources/project.config.md` from `project.config.example.md`. The skill reads
-it at runtime for `surface_default`, the `mobile_gates` / `web_gates` commands, and the `web_dev_server`.
-Edit it by hand anytime; re-running the installer keeps your edits unless you pass `--force`.
+`install.sh` generates `resources/project.config.md` (from `project.config.example.md`) into **each**
+skill. The skills read it at runtime for `surface_default`, the `mobile_gates` / `web_gates`
+commands, and the `web_dev_server`. Edit by hand anytime; re-running the installer keeps your edits
+unless you pass `--force`.
 
 ## Updating
 
-Pull this repo, then re-run `install.sh <project> --force` to refresh the skill + agents. Your
-`project.config.md` is preserved unless `--force` is given.
+Pull this repo (or re-run the remote one-liner), then `install.sh <project> --force` to refresh the
+skills + agents. Your `project.config.md` files are preserved unless `--force` is given.
 
 ## Credits
 

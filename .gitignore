@@ -1,10 +1,10 @@
 # Playwright bootstrap (install.sh --with-playwright) lands here when run in-place
-skills/go-loop/resources/node_modules/
-skills/go-loop/resources/package-lock.json
-skills/go-loop/resources/package.json
+skills/*/resources/node_modules/
+skills/*/resources/package-lock.json
+skills/*/resources/package.json
 
 # generated per-project config (created at install time in the TARGET, never in this repo)
-skills/go-loop/resources/project.config.md
+skills/*/resources/project.config.md
 
 # os / editor cruft
 .DS_Store
