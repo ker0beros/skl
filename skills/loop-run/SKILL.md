@@ -1,0 +1,110 @@
+---
+name: loop-run
+description: "Execute ready-to-run plans created by /loop-plan. Lists every plan marked Loop-Status: ready, asks which to run (one / multiple / all), then runs each through the same QA-gated build loop as /loop-feature (plan→tasks→analyze→checklist→implement→QA-gates, max 10 iterations per plan). Commits each passing plan as feat(NNN) on a loop-run/<stamp> integration branch and continues to the next — a hands-off batch runner. Never pushes or merges to main/dev."
+argument-hint: "(optional) plan numbers to run, e.g. '3 5 7' or 'all' — empty shows the picker"
+compatibility: "Requires the .specify/ spec-kit structure, the speckit-* skills, the QA agents in .claude/agents/ (Jenny, karen, claude-md-compliance-checker, code-quality-pragmatist, task-completion-validator, ui-comprehensive-tester, ultrathink-debugger), and the loop-feature skill installed alongside (it reuses loop-feature's pass-matrix.md, render-keyframes.mjs, and remediation-brief-template.md). Surface + gate commands + gate_strictness come from resources/project.config.md (written by install.sh)."
+metadata:
+  author: "khairul"
+  version: "1.0.0"
+  source: "skills/loop-run"
+user-invocable: true
+disable-model-invocation: true
+---
+
+## User Input
+
+```text
+$ARGUMENTS
+```
+
+If the input names **plan numbers** (e.g. `3 5 7`) or `all`, run those without prompting. Otherwise
+(empty / unclear) show the interactive picker.
+
+---
+
+## What this command does
+
+`/loop-run` is the **execution half** that pairs with `/loop-plan`. It finds the plans you queued
+(speckit features marked `Loop-Status: ready`), lets you pick **one / multiple / all**, and runs each
+through the **same Phase B loop as `/loop-feature`** — `plan → tasks → analyze → checklist → implement
+→ QA-gates`, iterating up to 10×. Each passing plan is committed `feat(NNN): <slug>` on a
+`loop-run/<stamp>` **integration branch** and the runner moves on automatically — so "run all" is
+hands-off. You review the integration branch at the end.
+
+`/loop-feature` is for a **single** feature end-to-end; `/loop-run` is the **batch** executor for plans
+authored separately by `/loop-plan`. It does **not** re-spec or re-clarify — the plan's `spec.md` is the
+contract.
+
+**Read `resources/project.config.md` FIRST** (surface, gate commands, `gate_strictness`). Honor the
+project's **constitution** + `CLAUDE.md`. The QA gate is **identical** to loop-feature's — seed it from
+`.claude/skills/loop-feature/resources/pass-matrix.md` (do not maintain a separate copy).
+
+---
+
+## Steps
+
+1. Read `resources/project.config.md`.
+2. **Discover ready plans.** Scan `specs/*/spec.md` for a `Loop-Status: ready` line (also surface
+   `running` plans as **resumable**). For each, read the plan number `NNN`, slug, recorded surface/mode
+   (design vs text-only), and the one-line intent. If **none are ready**, tell the user to create plans
+   with `/loop-plan` and **stop**.
+3. **Select.**
+   - If `$ARGUMENTS` named plan numbers or `all`, use that selection.
+   - Otherwise: fire `bash ~/.claude/notify-telegram.sh "[<project>] /loop-run awaiting plan selection"`,
+     then `AskUserQuestion` (**multiSelect: true**) listing each ready plan (`NNN · slug · intent`) plus
+     an **All ready plans** option. Run the chosen subset.
+4. **Integration branch.** Create `loop-run/<short-stamp>` off the current branch and stay on it. All
+   passing plans merge here; **never push, and never merge into main/dev.**
+
+Then, for each selected plan (lowest `NNN` first), with `iter = 1`:
+
+5. **Stage the plan.** Set its `Loop-Status: running`. Ensure the plan's `specs/NNN-slug/` is present on
+   the integration tip (it was authored on the plan's branch by `/loop-plan`); work on a per-plan branch
+   off the integration tip.
+6. **Build** (loop-feature Phase B). Via the Skill tool, with no human stop:
+   `speckit-plan → speckit-tasks → speckit-analyze → speckit-checklist → speckit-implement`.
+   On `iter > 1`, seed `speckit-plan` with `specs/<feature>/.loop-run/remediation-iter-<N-1>.md`.
+7. **Gate.** Run the automated gates from `project.config.md` (per `gate_strictness`; under `strict`,
+   analyze fatal-on-info); if red, the round failed. Then spawn the **6 QA agents** (Agent tool,
+   parallel) seeded per **`.claude/skills/loop-feature/resources/pass-matrix.md`**, honoring the plan's
+   recorded mode (design + animation parity in design mode; functional UI / behavior smoke in text-only
+   mode). The pass threshold follows `gate_strictness` (low/standard/strict + Info).
+8. **Resolve the plan.**
+   - **All pass** → `git add -A && git commit -m "feat(NNN): <slug>"` on the plan branch; `git checkout
+     <integration> && git merge --no-ff <plan-branch>`; set `Loop-Status: done`; fire `bash
+     ~/.claude/notify-telegram.sh "[<project>] /loop-run ✅ NNN <slug>"`; next plan.
+   - **Fail & `iter < 10`** → spawn `ultrathink-debugger` (Agent tool) with the aggregated findings +
+     failing gate output; it writes `specs/<feature>/.loop-run/remediation-iter-<iter>.md` using
+     `.claude/skills/loop-feature/resources/remediation-brief-template.md`; `iter += 1`; **go to step 6**.
+   - **Fail & `iter == 10`** → set `Loop-Status: deferred` (log why); `git checkout <integration>` and
+     leave the plan branch unmerged; fire `bash ~/.claude/notify-telegram.sh "[<project>] /loop-run ⚠️
+     DEFERRED NNN after 10 tries"`; next plan.
+
+## Stop condition
+
+9. When every selected plan is resolved → write `.loop-run/report.md` (per-plan result + iterations +
+   the integration branch) using `resources/run-report-template.md`, fire `bash
+   ~/.claude/notify-telegram.sh "[<project>] /loop-run done — <N> shipped, <M> deferred"`, present the
+   summary + the integration branch name, and **STOP**. Plans not selected this run stay `ready` for a
+   later `/loop-run`.
+
+---
+
+## Rules & invariants
+
+- **Batch executor, not a planner.** `/loop-run` never re-specs or re-clarifies — it builds from each
+  plan's `spec.md`. Create/edit plans with `/loop-plan`.
+- **Integration branch + commit per plan; never push/merge to main/dev.** The user reviews the
+  `loop-run/*` branch and merges when satisfied.
+- **Per-plan cap 10 → defer.** Deferred plans are reported, never silently dropped; their
+  `Loop-Status` is left `deferred`.
+- **Status is the source of truth.** `ready` → picked up; `running` → in progress/resumable; `done` /
+  `deferred` → not relisted. Selecting a subset leaves the rest `ready`.
+- **Reuses loop-feature's machinery** — the QA `pass-matrix.md`, `render-keyframes.mjs` (design-mode
+  parity), and `remediation-brief-template.md` all come from `.claude/skills/loop-feature/resources/`
+  (loop-feature is always installed via `install.sh`). Do not fork them.
+- **`gate_strictness` honored** (low/standard/strict + Info; toggle with `/loop-gate`).
+- **Telegram** prefix `[<project>]`; ping on selection (await), per plan (pass/defer), and final; skip
+  silently if the notifier is absent.
+- **Working files**: `.loop-run/report.md` at the repo root; per-plan remediation under
+  `specs/<feature>/.loop-run/`.

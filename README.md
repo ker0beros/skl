@@ -7,12 +7,15 @@ command plus two loops, sharing one QA-agent panel and one installer. Built on
 | Skill | Input | What it does |
 |-------|-------|--------------|
 | **`/loop-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
-| **`/loop-feature`** | a **claude.ai/design** project | Loops until a 6-agent QA panel passes for the feature (max 10 iterations) |
+| **`/loop-feature`** | a **feature** (text, or a **claude.ai/design** project for UI) | Loops until a 6-agent QA panel passes for the feature (max 10 iterations) |
 | **`/loop-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
 | **`/loop-fix`** | **user-reported bug(s)** | Diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
+| **`/loop-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
+| **`/loop-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the loop-feature QA loop, committing each on a review branch |
 | **`/loop-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
 | **`/loop-update`** | (none) | Pull the latest spec-loop from GitHub and refresh this project's skills + agents (keeps your config) |
 | **`/loop-resume`** | (optional) reset time | Auto-continue a loop after Claude's usage limit resets — waits for the status-bar timer + 3 min, then resumes |
+| **`/loop-help`** | (optional) command name | Lists every spec-loop command + a one-line explanation and the workflow (reads the installed skills, so it's always current) |
 
 The build/refactor/fix loops chain the individual `speckit-*` skills (`specify → … → implement`), then
 gate the result with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings
@@ -32,15 +35,42 @@ architecture, feature-first, …) and lets you **choose**, then runs `speckit-co
 Idempotent — re-run anytime. (After a fresh Spec Kit init it stops once for a Claude Code reload,
 then resumes.) The constitution it writes is what `/loop-refactor` reads as its target.
 
-## `/loop-feature` — design → feature
+## `/loop-feature` — feature → shipped & QA-verified
 
 ```
-/loop-feature <claude-design project name or uuid> — <one-line intent>
+/loop-feature <one-line intent>                              # text-only (any feature, UI or not)
+/loop-feature <claude-design project name or uuid> — <intent>   # design-driven (UI)
 ```
-Pulls the design (read-only, via `DesignSync`), generates `spec.md` (speckit `specify` + `clarify`),
-renders the design as the visual spec, **stops for your approval**, then runs
-`plan → tasks → analyze → checklist → implement → QA-gates`, looping until the panel passes.
-Verifies design **and animation** parity (keyframe + behavior checklist).
+The design reference is **optional** — not every feature has a UI. Generates `spec.md` (speckit
+`specify` + `clarify`), **stops for your approval**, then runs
+`plan → tasks → analyze → checklist → implement → QA-gates`, looping until the 6-agent panel passes.
+With a design (design-driven mode) it also pulls it (read-only, via `DesignSync`), renders it as the
+visual spec, and verifies design **and animation** parity (keyframe + behavior checklist). Without one
+(text-only mode) it works straight from your description and skips all the visual/animation steps.
+
+> Building **several** features? Decouple planning from execution: queue specs with **`/loop-plan`**,
+> then batch-run them with **`/loop-run`** (below).
+
+## `/loop-plan` + `/loop-run` — queue specs, then batch-run them
+
+`/loop-feature` does one feature end-to-end. To plan a backlog and run it as a batch, split the two:
+
+```
+/loop-plan <one-line intent>                                # text-only
+/loop-plan <claude-design project name or uuid> — <intent>  # design-driven (UI)
+/loop-run [3 5 7 | all]
+```
+
+- **`/loop-plan`** does only the planning half — optional design ingest → `specify` → `clarify`
+  (asking you questions) — and writes a **numbered, ready-to-run** spec (`Loop-Status: ready`). It
+  **never builds**. Run it as many times as you want to queue plans. Same optional-design behavior as
+  `/loop-feature` (design-driven or text-only).
+- **`/loop-run`** lists every `ready` plan, asks which to run (**one / multiple / all**), then runs each
+  through the **same QA loop as `/loop-feature`** — committing each passing plan `feat(NNN)` on a
+  `loop-run/<stamp>` integration branch and moving to the next automatically. Never pushes or merges to
+  main/dev; you review the branch at the end. Plans you don't select stay `ready` for later.
+
+It reuses loop-feature's QA pass-matrix + renderer (one source of truth), so the gate is identical.
 
 ## `/loop-refactor` — codebase → cleaner codebase
 
@@ -105,6 +135,9 @@ skills/loop-resume/   # SKILL.md — auto-continue a loop after a usage-limit re
 skills/loop-feature/  # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs, templates, config example)
 skills/loop-refactor/ # SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
 skills/loop-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + remediation templates)
+skills/loop-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans
+skills/loop-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses loop-feature's gate)
+skills/loop-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
 install.sh            # installs all skills + the agents into a target, stamping its gate commands
 ```
 
@@ -122,9 +155,10 @@ The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-ch
   Code: `/plugin marketplace add obra/superpowers-marketplace` then
   `/plugin install superpowers@superpowers-marketplace` (or `…@claude-plugins-official`), then reload.
   `/loop-init` checks for it.
-- **Design access** *(loop-feature only)* — the `DesignSync` tool / claude.ai login (`/design-login`).
-- **Playwright** *(loop-feature, web surfaces only)* — for rendering the design reference + web parity.
-  Mobile / refactor work doesn't need it.
+- **Design access** *(design-driven loop-feature only)* — the `DesignSync` tool / claude.ai login
+  (`/design-login`). Not needed for text-only features.
+- **Playwright** *(design-driven loop-feature, web surfaces only)* — for rendering the design reference
+  + web parity. Mobile / refactor / text-only work doesn't need it.
 
 ## Install
 

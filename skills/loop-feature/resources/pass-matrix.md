@@ -15,8 +15,9 @@ The threshold depends on **`gate_strictness`** in `project.config.md` (toggle it
 The **whole round passes** iff ALL of:
 1. The surface's automated gates exited 0 (see below).
 2. All 6 QA gate-agents pass.
-3. Every **Visual Target** and every **Animation Inventory** row in `spec.md` is present in the
-   live implementation and within tolerance (owned by `ui-comprehensive-tester`).
+3. **(design mode only)** Every **Visual Target** and every **Animation Inventory** row in `spec.md`
+   is present in the live implementation and within tolerance (owned by `ui-comprehensive-tester`).
+   In **text-only mode** there are no Visual Targets/Animation rows, so this clause is skipped.
 
 If the round does not pass and `iteration < 10`, the aggregated findings go to
 `ultrathink-debugger`, which writes the remediation brief that seeds the next `speckit-plan`.
@@ -40,11 +41,13 @@ severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the dr
 
 **Shared context block** (prepend to every agent prompt):
 
-> Feature spec: `specs/<feature>/spec.md` (read it in full, including the Visual Targets and
-> Animation Inventory tables). Surface: `<web|mobile>`. Working diff: run `git diff <base>...HEAD`.
-> Rendered design references: `specs/<feature>/references/` (the PNGs + `animation-timings.json`
-> are the authoritative spec — compare against them, not the source HTML). Report findings with
-> severity (Critical/High/Medium/Low/Info — Info = info-level lint/hint) and file:line evidence. End with a `VERDICT:` line.
+> Feature spec: `specs/<feature>/spec.md` (read it in full). Surface: `<web|mobile|non-UI>`. Working
+> diff: run `git diff <base>...HEAD`. **Design mode only:** the spec includes Visual Targets +
+> Animation Inventory tables, and rendered design references live under `specs/<feature>/references/`
+> (the PNGs + `animation-timings.json` are the authoritative spec — compare against them, not the
+> source HTML). **Text-only mode:** there is no design reference; verify against the spec's written
+> requirements. Report findings with severity (Critical/High/Medium/Low/Info — Info = info-level
+> lint/hint) and file:line evidence. End with a `VERDICT:` line.
 
 | Gate | `subagent_type` | Specific ask |
 |------|------------------|--------------|
@@ -53,7 +56,7 @@ severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the dr
 | Simplicity | `code-quality-pragmatist` | Flag over-engineering, premature abstraction, dead indirection introduced by this change. |
 | Reality | `karen` | Run it — endpoints/screens/flows — and report where claimed-done behavior does not actually work. |
 | Task completion | `task-completion-validator` | Confirm each task in `specs/<feature>/tasks.md` is functional end-to-end, not just edited. |
-| UI + design/animation parity | `ui-comprehensive-tester` | Drive the live app and verify **every Visual Target + Animation Inventory row**. Web: start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/loop-feature/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. Mobile: Mobile MCP / Flutter integration screenshots for the same start/mid/end frames. Any missing element, wrong trigger, or duration/easing outside ±20% is at least a Medium finding. |
+| UI + design/animation parity | `ui-comprehensive-tester` | **Design mode:** drive the live app and verify **every Visual Target + Animation Inventory row**. Web: start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/loop-feature/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. Mobile: Mobile MCP / Flutter integration screenshots for the same start/mid/end frames. Any missing element, wrong trigger, or duration/easing outside ±20% is at least a Medium finding. **Text-only mode:** no Visual Targets — if the feature has UI, functionally smoke the new flow (states, edge cases, errors); if it's non-UI, runtime-smoke the feature's paths. |
 
 ## Severity → blocking, at a glance
 
