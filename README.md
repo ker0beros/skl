@@ -147,9 +147,20 @@ install.sh /path/to/project --force                # overwrite files that differ
 install.sh /path/to/project --agents-global        # agents → ~/.claude/agents (shared across projects)
 ```
 
-After installing, **reload Claude Code** in the target so the new skills (`/loop-init`,
-`/loop-feature`, `/loop-refactor`, `/loop-gate`, `/loop-update`) and the agents register — then run
-**`/loop-init`** first to set up Spec Kit and author the constitution.
+After installing:
+
+1. **Install the Superpowers plugin** (needed by `/loop-fix`) — in Claude Code, run:
+   ```
+   /plugin marketplace add obra/superpowers-marketplace
+   /plugin install superpowers@superpowers-marketplace
+   ```
+   (or `/plugin install superpowers@claude-plugins-official`). It's a `/plugin` command, so it can't be
+   installed by `install.sh` — do it in the Claude Code session.
+2. **Reload Claude Code** in the target so the new skills (`/loop-init`, `/loop-feature`,
+   `/loop-refactor`, `/loop-fix`, `/loop-gate`, `/loop-update`, `/loop-resume`), the agents, and the
+   Superpowers plugin all register.
+3. Run **`/loop-init`** first to set up Spec Kit and author the constitution (it also checks that
+   Superpowers is present).
 
 ### Remote install (no local checkout)
 
