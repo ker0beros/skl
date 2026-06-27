@@ -1,13 +1,14 @@
-# go-loop — project config (EXAMPLE / template)
+# loop-feature — project config (EXAMPLE / template)
 #
 # install.sh generates `project.config.md` from this template, stamping in the values it
-# detects for the target project. The go-loop SKILL reads `project.config.md` at runtime for
+# detects for the target project. The loop-feature SKILL reads `project.config.md` at runtime for
 # the surface default and the gate commands. You can hand-edit `project.config.md` anytime.
 
 project_name: <project>
 project_root: </abs/path/to/project>
 surface_default: mobile        # one of: web | mobile | both | auto
 playwright: absent             # present | absent  (web design-ref rendering + web parity need Playwright)
+gate_strictness: standard      # low = 0 Crit/High/Med (Low+Info logged) | standard = also 0 Low (Info logged) | strict = also 0 Info (info-level lints). Toggle with /loop-gate
 
 ## Automated gate commands — Phase B step 10. Every listed command must exit 0.
 mobile_gates:

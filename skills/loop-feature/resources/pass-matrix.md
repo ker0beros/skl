@@ -1,13 +1,16 @@
-# go-loop — QA pass matrix
+# loop-feature — QA pass matrix
 
-This is the gate definition for Phase B step 11–12 of `SKILL.md`. The `/go-loop` driver
+This is the gate definition for Phase B step 11–12 of `SKILL.md`. The `/loop-feature` driver
 owns the pass/fail call; the agents only **report**. A finding's severity is whatever the
 agent assigns (Critical / High / Medium / Low).
 
 ## Pass rule
 
-A single gate **passes** iff it reports **0 Critical, 0 High, AND 0 Medium** findings.
-**Low** findings are logged in the report as non-blocking debt and do **not** trigger another loop.
+The threshold depends on **`gate_strictness`** in `project.config.md` (toggle it with `/loop-gate`; treat a missing field as `standard`). The severity ladder is **Critical › High › Medium › Low › Info** (Info = info-level lint diagnostics / hints). **Medium and above always block**; the mode decides how far below that also blocks:
+
+- **`low`** — a single gate **passes** iff it reports **0 Critical, 0 High, AND 0 Medium**. **Low + Info** are logged as non-blocking debt.
+- **`standard`** (default) — passes only at **0 Critical, 0 High, 0 Medium, AND 0 Low**. **Info** is logged, non-blocking.
+- **`strict`** — passes only at **0 Critical, 0 High, 0 Medium, 0 Low, AND 0 Info**: every finding, even info-level lints, must be fixed. The automated analyze gate must therefore be clean of **info-level diagnostics** too (run it fatal-on-info — e.g. `--fatal-infos` / `--max-warnings 0` — or treat any lint output as a blocking Info finding), not merely exit 0.
 
 The **whole round passes** iff ALL of:
 1. The surface's automated gates exited 0 (see below).
@@ -31,8 +34,9 @@ A red automated gate fails the round immediately — feed its stdout/stderr to `
 ## The 6 gate agents
 
 Spawn all six in parallel (one Agent message). Each gets the **same shared context block**, then
-its **specific ask**. Each MUST end its report with a one-line `VERDICT:` summarising counts, e.g.
-`VERDICT: 0 Critical, 0 High, 0 Medium, 2 Low → PASS`.
+its **specific ask**. Each MUST end its report with a one-line `VERDICT:` summarising counts per
+severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the driver applies the
+`gate_strictness` threshold (Low blocks in standard/strict; Info blocks only in strict) to decide pass/fail.
 
 **Shared context block** (prepend to every agent prompt):
 
@@ -40,7 +44,7 @@ its **specific ask**. Each MUST end its report with a one-line `VERDICT:` summar
 > Animation Inventory tables). Surface: `<web|mobile>`. Working diff: run `git diff <base>...HEAD`.
 > Rendered design references: `specs/<feature>/references/` (the PNGs + `animation-timings.json`
 > are the authoritative spec — compare against them, not the source HTML). Report findings with
-> severity (Critical/High/Medium/Low) and file:line evidence. End with a `VERDICT:` line.
+> severity (Critical/High/Medium/Low/Info — Info = info-level lint/hint) and file:line evidence. End with a `VERDICT:` line.
 
 | Gate | `subagent_type` | Specific ask |
 |------|------------------|--------------|
@@ -49,14 +53,15 @@ its **specific ask**. Each MUST end its report with a one-line `VERDICT:` summar
 | Simplicity | `code-quality-pragmatist` | Flag over-engineering, premature abstraction, dead indirection introduced by this change. |
 | Reality | `karen` | Run it — endpoints/screens/flows — and report where claimed-done behavior does not actually work. |
 | Task completion | `task-completion-validator` | Confirm each task in `specs/<feature>/tasks.md` is functional end-to-end, not just edited. |
-| UI + design/animation parity | `ui-comprehensive-tester` | Drive the live app and verify **every Visual Target + Animation Inventory row**. Web: start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/go-loop/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. Mobile: Mobile MCP / Flutter integration screenshots for the same start/mid/end frames. Any missing element, wrong trigger, or duration/easing outside ±20% is at least a Medium finding. |
+| UI + design/animation parity | `ui-comprehensive-tester` | Drive the live app and verify **every Visual Target + Animation Inventory row**. Web: start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/loop-feature/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. Mobile: Mobile MCP / Flutter integration screenshots for the same start/mid/end frames. Any missing element, wrong trigger, or duration/easing outside ±20% is at least a Medium finding. |
 
 ## Severity → blocking, at a glance
 
-- **Critical** — broken core functionality / spec contract violated → blocks.
-- **High** — important gap or incorrect implementation → blocks.
-- **Medium** — works with caveats / parity off within tolerance band → blocks (per user decision).
-- **Low** — cosmetic / nice-to-have → logged, non-blocking.
+- **Critical** — broken core functionality / spec contract violated → blocks (all modes).
+- **High** — important gap or incorrect implementation → blocks (all modes).
+- **Medium** — works with caveats / parity off within tolerance band → blocks (all modes).
+- **Low** — cosmetic / nice-to-have → blocks in `standard` + `strict`; logged, non-blocking in `low` (`/loop-gate`).
+- **Info** — info-level lint diagnostics / hints → blocks **only in `strict`**; logged, non-blocking in `standard` + `low`.
 
 ## Tuning ("refine as we go")
 

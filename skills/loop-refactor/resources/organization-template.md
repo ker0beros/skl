@@ -1,10 +1,10 @@
 # Code organization — <project> (Phase 0 output)
 
-> Written by `/refactor-loop` Phase 0. This is the **target** the refactor drives toward — its
+> Written by `/loop-refactor` Phase 0. This is the **target** the refactor drives toward — its
 > source of truth is the project's **constitution**, which must declare the code organization (if it
 > was silent, Phase 0 seeded it there from best-practice research with the user's sign-off first),
 > reconciled with CLAUDE.md and the dominant existing patterns. NOT invented. Save as
-> `.refactor-loop/organization.md`.
+> `.loop-refactor/organization.md`.
 
 ## Sources of truth
 - Constitution: `.specify/memory/constitution.md` — **the** source of the code organization; cite the binding principles. If it was silent, Phase 0 added them here before this file was written.

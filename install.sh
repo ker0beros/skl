@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# spec-loop installer — drops the go-loop + refactor-loop skills + 7 QA agents into a
+# spec-loop installer — drops the loop-feature + loop-refactor skills + 7 QA agents into a
 # spec-kit project and stamps that project's surface + gate commands into project.config.md.
 #
 # Usage:
@@ -12,7 +12,8 @@
 #   --dev-cmd "<cmd>"                  override the web dev-server command
 #   --with-playwright                  npm-install Playwright+chromium into the skill (web rendering on any project)
 #   --agents-global                    install agents into ~/.claude/agents instead of <target>/.claude/agents
-#   --force                            overwrite files that differ (default: skip differing files)
+#   --force                            overwrite files that differ, INCLUDING regenerating project.config.md
+#   --update                           overwrite skills + agents to latest, but KEEP each project.config.md
 #   -h, --help                         show this help
 #
 # TARGET_DIR defaults to the current directory.
@@ -27,6 +28,7 @@ DEV_CMD=""
 WITH_PLAYWRIGHT=0
 AGENTS_GLOBAL=0
 FORCE=0
+UPDATE=0
 
 usage() { awk 'NR>1{ if(/^#/){sub(/^# ?/,"");print} else exit }' "$0"; exit "${1:-0}"; }
 
@@ -41,11 +43,17 @@ while [ $# -gt 0 ]; do
     --with-playwright) WITH_PLAYWRIGHT=1; shift ;;
     --agents-global) AGENTS_GLOBAL=1; shift ;;
     --force) FORCE=1; shift ;;
+    --update) UPDATE=1; shift ;;
     -h|--help) usage 0 ;;
     --*) echo "unknown option: $1" >&2; usage 2 ;;
     *) TARGET="$1"; POSITIONAL_SET=1; shift ;;
   esac
 done
+
+# OVERWRITE governs file copies (skills + agents); FORCE alone governs config regeneration.
+# --update overwrites files but preserves project.config.md; --force does both.
+OVERWRITE=0
+{ [ "$FORCE" = 1 ] || [ "$UPDATE" = 1 ]; } && OVERWRITE=1
 
 # ---- resolve + validate target ---------------------------------------------
 if [ ! -d "$TARGET" ]; then echo "error: target dir not found: $TARGET" >&2; exit 1; fi
@@ -54,10 +62,12 @@ PROJECT_NAME="$(basename "$TARGET")"
 echo "spec-loop installer"
 echo "  source: $SOURCE_DIR"
 echo "  target: $TARGET"
+[ "$UPDATE" = 1 ] && echo "  mode: update (refresh skills + agents; keep each project.config.md)"
+[ "$FORCE" = 1 ] && echo "  mode: force (overwrite everything, including project.config.md)"
 
 # ---- spec-kit check (warn, don't fail) -------------------------------------
 if [ ! -d "$TARGET/.specify" ]; then
-  echo "  WARNING: no .specify/ in target — go-loop needs Spec Kit (the speckit-* skills)."
+  echo "  WARNING: no .specify/ in target — loop-feature needs Spec Kit (the speckit-* skills)."
   echo "           init it with:  uvx --from git+https://github.com/github/spec-kit.git specify init --here"
 fi
 
@@ -111,8 +121,8 @@ copy_file() { # src dst
   local src="$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
   if [ -f "$dst" ] && ! cmp -s "$src" "$dst"; then
-    if [ "$FORCE" = 1 ]; then cp "$src" "$dst"; echo "  overwrote ${dst#$TARGET/}"
-    else echo "  SKIP (differs, use --force): ${dst#$TARGET/}"; fi
+    if [ "$OVERWRITE" = 1 ]; then cp "$src" "$dst"; echo "  overwrote ${dst#$TARGET/}"
+    else echo "  SKIP (differs, use --update or --force): ${dst#$TARGET/}"; fi
   else cp "$src" "$dst"; fi
 }
 
@@ -124,6 +134,7 @@ for f in "$SOURCE_DIR"/agents/*.md; do copy_file "$f" "$AGENTS_DST/$(basename "$
 # ---- config writer (per skill) ---------------------------------------------
 write_config() { # dest_path
   local cfg="$1"
+  mkdir -p "$(dirname "$cfg")"
   if [ -f "$cfg" ] && [ "$FORCE" != 1 ]; then
     echo "  KEEP existing config (use --force to regenerate): ${cfg#$TARGET/}"; return
   fi
@@ -136,6 +147,7 @@ write_config() { # dest_path
     echo "project_root: $TARGET"
     echo "surface_default: $SURFACE"
     echo "playwright: $PLAYWRIGHT"
+    echo "gate_strictness: standard   # low = 0 Crit/High/Med (Low+Info logged) | standard = also 0 Low (Info logged) | strict = also 0 Info. Toggle with /loop-gate"
     echo
     echo "## Automated gate commands. Every listed command must exit 0."
     echo "mobile_gates:"
@@ -174,7 +186,7 @@ for skilldir in "$SOURCE_DIR"/skills/*/; do
   copy_file "${skilldir}SKILL.md" "$SKILL_DST/SKILL.md"
   for f in "${skilldir}resources/"*; do [ -e "$f" ] && copy_file "$f" "$SKILL_DST/resources/$(basename "$f")"; done
 
-  # Playwright bootstrap only for a skill that ships the renderer (go-loop)
+  # Playwright bootstrap only for a skill that ships the renderer (loop-feature)
   if [ "$WITH_PLAYWRIGHT" = 1 ] && [ -f "$SKILL_DST/resources/render-keyframes.mjs" ]; then
     echo "  bootstrapping Playwright into $skill/resources…"
     ( cd "$SKILL_DST/resources" \
@@ -197,7 +209,7 @@ echo "   gates: $ANALYZE_CMD ; $TEST_CMD"
 echo
 echo "Next:"
 echo "  1) Reload Claude Code in $PROJECT_NAME so the skills + QA agents register."
-echo "  2) Run /init-loop FIRST — it installs Spec Kit (if missing) + authors the constitution."
-echo "  3) /go-loop needs design access (DesignSync): sign in to claude.ai or run /design-login."
-echo "  4) Run:  /go-loop <design project> — <intent>     or     /refactor-loop [scope]"
-[ -d "$TARGET/.specify" ] || echo "  (i) No .specify/ yet — /init-loop will install Spec Kit for you."
+echo "  2) Run /loop-init FIRST — it installs Spec Kit (if missing) + authors the constitution."
+echo "  3) /loop-feature needs design access (DesignSync): sign in to claude.ai or run /design-login."
+echo "  4) Run:  /loop-feature <design project> — <intent>     or     /loop-refactor [scope]"
+[ -d "$TARGET/.specify" ] || echo "  (i) No .specify/ yet — /loop-init will install Spec Kit for you."

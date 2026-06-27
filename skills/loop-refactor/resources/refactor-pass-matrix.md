@@ -1,12 +1,16 @@
-# refactor-loop — QA pass matrix
+# loop-refactor — QA pass matrix
 
 Gate definition for Phase 2 step 8 of `SKILL.md`. The driver owns the pass/fail call; the agents
 only **report** severity-tagged findings (Critical / High / Medium / Low).
 
 ## Pass rule
 
-A single gate **passes** iff it reports **0 Critical, 0 High, AND 0 Medium** findings (Low is logged,
-non-blocking). The **whole round passes** iff:
+The threshold depends on **`gate_strictness`** in `project.config.md` (toggle it with `/loop-gate`; treat a missing field as `standard`). Severity ladder: **Critical › High › Medium › Low › Info** (Info = info-level lint diagnostics). **Medium and above always block**:
+- **`low`** — a single gate **passes** iff it reports **0 Critical, 0 High, AND 0 Medium** (**Low + Info** logged, non-blocking).
+- **`standard`** (default) — passes only at **0 Critical, 0 High, 0 Medium, AND 0 Low** (**Info** logged, non-blocking).
+- **`strict`** — passes only at **0 Critical, 0 High, 0 Medium, 0 Low, AND 0 Info**: even info-level lints must be clean, so the analyze gate must be run fatal-on-info (e.g. `--fatal-infos` / `--max-warnings 0`), not merely exit 0.
+
+The **whole round passes** iff:
 1. The automated gates (from `project.config.md`) exit 0 — **this proves behavior is preserved**.
 2. All 6 QA gate-agents pass.
 
@@ -24,7 +28,7 @@ unchanged.** If the project's tests are thin, note it in the report — the safe
 Spawn all six in parallel. Shared context to prepend:
 
 > This is a **refactor** — structure changes, behavior must NOT. Target organization:
-> `.refactor-loop/organization.md`. Item spec: `specs/<feature>/spec.md` (`Refactor-Item: <id>`).
+> `.loop-refactor/organization.md`. Item spec: `specs/<feature>/spec.md` (`Refactor-Item: <id>`).
 > Working diff: `git diff <integration-base>...HEAD`. Pre-refactor behavior is the baseline —
 > any change in observable behavior is a regression. Report findings with severity + file:line.
 > End with a `VERDICT:` line (counts → PASS/FAIL).

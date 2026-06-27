@@ -1,7 +1,7 @@
 # Refactor backlog — <project> (Phase 1 output)
 
-> Written by `/refactor-loop` Phase 1. Prioritized, highest severity first. Save as
-> `.refactor-loop/backlog.md`. Each item becomes one speckit feature in Phase 2.
+> Written by `/loop-refactor` Phase 1. Prioritized, highest severity first. Save as
+> `.loop-refactor/backlog.md`. Each item becomes one speckit feature in Phase 2.
 
 ## Severity (drives order + the pass gate)
 - **Critical** — breaks the architecture / blocks other work / actively risky (e.g. layer violation that leaks framework into domain).
