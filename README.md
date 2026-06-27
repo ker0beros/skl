@@ -1,16 +1,31 @@
 # spec-loop
 
-Two portable Claude Code skills for **spec-driven, QA-gated, autonomous loops** — sharing one
-QA-agent panel and one installer. Built on [Spec Kit](https://github.com/github/spec-kit).
+Portable Claude Code skills for **spec-driven, QA-gated, autonomous loops** — a one-time setup
+command plus two loops, sharing one QA-agent panel and one installer. Built on
+[Spec Kit](https://github.com/github/spec-kit).
 
-| Skill | Input | Loops until |
-|-------|-------|-------------|
-| **`/go-loop`** | a **claude.ai/design** project | a 6-agent QA panel passes for the feature (max 10 iterations) |
-| **`/refactor-loop`** | the **codebase itself** | a re-audit finds no Critical/High refactors left and all gates are green |
+| Skill | Input | What it does |
+|-------|-------|--------------|
+| **`/init-loop`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
+| **`/go-loop`** | a **claude.ai/design** project | Loops until a 6-agent QA panel passes for the feature (max 10 iterations) |
+| **`/refactor-loop`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
 
 Both chain the individual `speckit-*` skills (`specify → … → implement`), then gate the result with
 the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings. On failure,
 `ultrathink-debugger` turns the findings into the next iteration's plan.
+
+## `/init-loop` — first-time setup (run this once)
+
+```
+/init-loop [optional tech-stack hint]
+```
+Bootstraps a project for the loops. Installs the prerequisites (**Spec Kit** + the `speckit-*`
+skills, optional Playwright), verifies the QA panel, then authors the project's **constitution**:
+it asks your **tech stack**, **web-searches** the best-fit code organization (melos, clean
+architecture, feature-first, …) and lets you **choose**, then runs `speckit-constitution` to encode
+*code quality, testing/TDD, UX consistency, performance,* and the **chosen code organization**.
+Idempotent — re-run anytime. (After a fresh Spec Kit init it stops once for a Claude Code reload,
+then resumes.) The constitution it writes is what `/refactor-loop` reads as its target.
 
 ## `/go-loop` — design → feature
 
@@ -27,19 +42,21 @@ Verifies design **and animation** parity (keyframe + behavior checklist).
 ```
 /refactor-loop [optional scope: path / package / theme]
 ```
-Analyzes the code and defines the **target organization** (from the constitution + CLAUDE.md +
-dominant patterns), audits it into a prioritized **backlog**, then **autonomously** refactors each
-item through the speckit workflow, QA-gates it (behavior-preservation centric), commits it on a
-`refactor-loop/*` review branch, and **re-audits** until nothing Critical/High remains. Never pushes
-or merges to main/dev — you review the integration branch.
+Reads the **target organization from the constitution** (if the constitution is silent on code
+organization, it web-searches best practices, gets your sign-off, and seeds the constitution — the
+loop's one approval gate), audits the code into a prioritized **backlog**, then **autonomously**
+refactors each item through the speckit workflow, QA-gates it (behavior-preservation centric),
+commits it on a `refactor-loop/*` review branch, and **re-audits** until nothing Critical/High
+remains. Never pushes or merges to main/dev — you review the integration branch.
 
 ## What's in here
 
 ```
-agents/              # 7 QA subagents (shared by both skills)
+agents/              # 7 QA subagents (shared by the loops)
+skills/init-loop/    # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
 skills/go-loop/      # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs, templates, config example)
 skills/refactor-loop/# SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
-install.sh           # installs both skills + the agents into a target, stamping its gate commands
+install.sh           # installs all skills + the agents into a target, stamping its gate commands
 ```
 
 The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-checker`,
@@ -48,8 +65,9 @@ The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-ch
 
 ## Prerequisites (on the target project)
 
-- **Spec Kit** — `.specify/` + the `speckit-*` skills. Both skills orchestrate these.
-  Init with: `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
+- **Spec Kit** — `.specify/` + the `speckit-*` skills. The loops orchestrate these.
+  `/init-loop` installs this for you; or init by hand with
+  `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
 - **Design access** *(go-loop only)* — the `DesignSync` tool / claude.ai login (`/design-login`).
 - **Playwright** *(go-loop, web surfaces only)* — for rendering the design reference + web parity.
   Mobile / refactor work doesn't need it.
@@ -75,8 +93,9 @@ install.sh /path/to/project --force                # overwrite files that differ
 install.sh /path/to/project --agents-global        # agents → ~/.claude/agents (shared across projects)
 ```
 
-After installing, **reload Claude Code** in the target so `/go-loop`, `/refactor-loop`, and the
-agents register.
+After installing, **reload Claude Code** in the target so `/init-loop`, `/go-loop`,
+`/refactor-loop`, and the agents register — then run **`/init-loop`** first to set up Spec Kit and
+author the constitution.
 
 ### Remote install (no local checkout)
 
