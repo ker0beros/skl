@@ -72,7 +72,7 @@ if [ ! -d "$TARGET/.specify" ]; then
 fi
 
 # ---- superpowers note (can't auto-install a Claude Code plugin from bash) ---
-echo "  NOTE: /loop-fix needs the Superpowers plugin (obra/Superpowers). Install it in Claude Code:"
+echo "  NOTE: /loop-fix + /loop-design need the Superpowers plugin (obra/Superpowers). Install it in Claude Code:"
 echo "          /plugin marketplace add obra/superpowers-marketplace"
 echo "          /plugin install superpowers@superpowers-marketplace"
 echo "        then reload. (/loop-init also checks for it.)"
@@ -219,5 +219,5 @@ echo "  2) Run /loop-init FIRST — it installs Spec Kit (if missing) + authors 
 echo "  3) /loop-feature needs design access (DesignSync): sign in to claude.ai or run /design-login."
 echo "  4) Run:  /loop-feature <design project> — <intent>     or     /loop-refactor [scope]"
 echo "     Batch:  /loop-plan <intent>  (queue many)  then  /loop-run [all]"
-echo "  5) For /loop-fix: install the Superpowers plugin (see the NOTE above) + reload."
+echo "  5) For /loop-fix + /loop-design: install the Superpowers plugin (see the NOTE above) + reload."
 [ -d "$TARGET/.specify" ] || echo "  (i) No .specify/ yet — /loop-init will install Spec Kit for you."

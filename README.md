@@ -7,9 +7,10 @@ command plus two loops, sharing one QA-agent panel and one installer. Built on
 | Skill | Input | What it does |
 |-------|-------|--------------|
 | **`/loop-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
+| **`/loop-design`** | a **feature flow** to design | Brainstorms (Superpowers) a Claude Design prompt — design system + platforms (mobile/tablet/web) + screens/states — then auto-writes the plan |
 | **`/loop-feature`** | a **feature** (text, or a **claude.ai/design** project for UI) | Loops until a 6-agent QA panel passes for the feature (max 10 iterations) |
 | **`/loop-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
-| **`/loop-fix`** | **user-reported bug(s)** | Diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
+| **`/loop-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
 | **`/loop-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
 | **`/loop-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the loop-feature QA loop, committing each on a review branch |
 | **`/loop-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
@@ -34,6 +35,19 @@ architecture, feature-first, …) and lets you **choose**, then runs `speckit-co
 *code quality, testing/TDD, UX consistency, performance,* and the **chosen code organization**.
 Idempotent — re-run anytime. (After a fresh Spec Kit init it stops once for a Claude Code reload,
 then resumes.) The constitution it writes is what `/loop-refactor` reads as its target.
+
+## `/loop-design` — brainstorm a Claude Design prompt, then plan
+
+```
+/loop-design [feature flow to design]
+```
+Upstream design ideation. Asks whether your **design system** already exists in claude.ai/design (and
+helps you define one step-by-step if not), which **platforms** to design for (**mobile / tablet (iPad) /
+web** — some or all), and your **feature flow**; then uses [Superpowers](https://github.com/obra/Superpowers)
+`brainstorming` to expand the flow into screens / states / interactions and **writes a ready-to-paste
+Claude Design prompt** (`.loop-design/<slug>/claude-design-prompt.md`). Finally it **auto-chains into
+`/loop-plan`** to create the numbered, ready-to-run spec. It writes a prompt — it never writes to your
+Claude Design account. Pipeline: `/loop-design` → paste prompt into claude.ai/design → `/loop-run`.
 
 ## `/loop-feature` — feature → shipped & QA-verified
 
@@ -87,9 +101,13 @@ remains. Never pushes or merges to main/dev — you review the integration branc
 ## `/loop-fix` — fix bugs by root cause
 
 ```
-/loop-fix <bug(s): symptom / repro / expected-vs-actual>
+/loop-fix <bug(s): symptom / repro / expected-vs-actual>     # free text
+/loop-fix https://github.com/OWNER/REPO/issues/123           # or a GitHub/GitLab issue URL
 ```
-Diagnoses each reported bug's **root cause** with [Superpowers](https://github.com/obra/Superpowers)
+Bugs can be **plain text or a GitHub/GitLab issue URL** (incl. self-hosted GitLab). For a linked issue
+it fetches the title + body + comments via the `gh` / `glab` CLI using **your** access — and if access
+is missing it walks you through granting it, step by step (`resources/issue-access.md`). Then it
+diagnoses each bug's **root cause** with [Superpowers](https://github.com/obra/Superpowers)
 `systematic-debugging` (not the symptom), writes a prioritized **fix backlog**, then **autonomously**
 fixes each bug through the speckit workflow **test-first** (a failing reproduction test → the
 root-cause fix → green), QA-gates it, and **proves the symptom is gone** with Superpowers
@@ -129,6 +147,7 @@ resets), so the same loop resumes in the same context — the loops pick up from
 ```
 agents/               # 7 QA subagents (shared by the loops)
 skills/loop-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
+skills/loop-design/   # SKILL.md + resources/ (design-system checklist + Claude Design prompt template)
 skills/loop-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
 skills/loop-update/   # SKILL.md — pull latest from GitHub + re-install (keeps project.config.md)
 skills/loop-resume/   # SKILL.md — auto-continue a loop after a usage-limit reset
@@ -150,9 +169,9 @@ The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-ch
 - **Spec Kit** — `.specify/` + the `speckit-*` skills. The loops orchestrate these.
   `/loop-init` installs this for you; or init by hand with
   `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
-- **Superpowers** *(loop-fix only)* — the [obra/Superpowers](https://github.com/obra/Superpowers)
-  plugin, for its `systematic-debugging` + `verification-before-completion` skills. Install in Claude
-  Code: `/plugin marketplace add obra/superpowers-marketplace` then
+- **Superpowers** *(loop-fix + loop-design)* — the [obra/Superpowers](https://github.com/obra/Superpowers)
+  plugin: `loop-fix` uses `systematic-debugging` + `verification-before-completion`, `loop-design` uses
+  `brainstorming`. Install in Claude Code: `/plugin marketplace add obra/superpowers-marketplace` then
   `/plugin install superpowers@superpowers-marketplace` (or `…@claude-plugins-official`), then reload.
   `/loop-init` checks for it.
 - **Design access** *(design-driven loop-feature only)* — the `DesignSync` tool / claude.ai login

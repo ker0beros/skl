@@ -2,7 +2,8 @@
 
 > Written by `/loop-fix` Phase 0, after Superpowers `systematic-debugging` confirms each bug's root
 > cause. Prioritized, highest severity first. Save as `.loop-fix/backlog.md`. Each item becomes one
-> speckit feature in Phase 1.
+> speckit feature in Phase 1. For a bug that came from a **GitHub/GitLab issue URL**, record that URL
+> in the row (e.g. in the symptom cell) so the fix is traceable to the issue.
 
 ## Severity (drives order + the pass gate)
 - **Critical** — data loss / crash / security / core flow broken for many users.
