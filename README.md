@@ -9,12 +9,14 @@ command plus two loops, sharing one QA-agent panel and one installer. Built on
 | **`/loop-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
 | **`/loop-feature`** | a **claude.ai/design** project | Loops until a 6-agent QA panel passes for the feature (max 10 iterations) |
 | **`/loop-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
+| **`/loop-fix`** | **user-reported bug(s)** | Diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
 | **`/loop-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
 | **`/loop-update`** | (none) | Pull the latest spec-loop from GitHub and refresh this project's skills + agents (keeps your config) |
+| **`/loop-resume`** | (optional) reset time | Auto-continue a loop after Claude's usage limit resets — waits for the status-bar timer + 3 min, then resumes |
 
-Both loops chain the individual `speckit-*` skills (`specify → … → implement`), then gate the result
-with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings (and, per
-`/loop-gate`, also 0 Low and/or 0 Info). On failure, `ultrathink-debugger` turns the findings into the
+The build/refactor/fix loops chain the individual `speckit-*` skills (`specify → … → implement`), then
+gate the result with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings
+(and, per `/loop-gate`, also 0 Low and/or 0 Info). On failure, `ultrathink-debugger` turns the findings into the
 next iteration's plan.
 
 ## `/loop-init` — first-time setup (run this once)
@@ -52,6 +54,19 @@ refactors each item through the speckit workflow, QA-gates it (behavior-preserva
 commits it on a `loop-refactor/*` review branch, and **re-audits** until nothing Critical/High
 remains. Never pushes or merges to main/dev — you review the integration branch.
 
+## `/loop-fix` — fix bugs by root cause
+
+```
+/loop-fix <bug(s): symptom / repro / expected-vs-actual>
+```
+Diagnoses each reported bug's **root cause** with [Superpowers](https://github.com/obra/Superpowers)
+`systematic-debugging` (not the symptom), writes a prioritized **fix backlog**, then **autonomously**
+fixes each bug through the speckit workflow **test-first** (a failing reproduction test → the
+root-cause fix → green), QA-gates it, and **proves the symptom is gone** with Superpowers
+`verification-before-completion` (fresh evidence, full suite green — no regression). Commits each fix
+on a `loop-fix/*` review branch; never pushes or merges to main/dev. If the symptom still reproduces it
+**re-diagnoses** rather than re-patching. Requires the **Superpowers** plugin (see Prerequisites).
+
 ## `/loop-gate` — how strict the QA gates are
 
 ```
@@ -68,6 +83,17 @@ always block**; the mode decides how far below that also blocks, down the ladder
 
 Writes `gate_strictness` into each skill's `project.config.md`; takes effect on the next loop run.
 
+## `/loop-resume` — auto-continue after a usage-limit reset
+
+```
+/loop-resume [reset time from the status bar, e.g. 2h15m]
+```
+Long `/loop-feature` / `/loop-refactor` runs can hit Claude's 5-hour or weekly cap and stop mid-flight.
+When the rate-limit alert fires, run `/loop-resume`: it reads the reset time from the **status-bar
+timer**, waits until **reset + 3 min** (a safety buffer), then re-invokes the loop so it continues
+where it left off. The wait is in-session via `ScheduleWakeup` (re-arming hourly for multi-hour
+resets), so the same loop resumes in the same context — the loops pick up from their working files.
+
 ## What's in here
 
 ```
@@ -75,8 +101,10 @@ agents/               # 7 QA subagents (shared by the loops)
 skills/loop-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
 skills/loop-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
 skills/loop-update/   # SKILL.md — pull latest from GitHub + re-install (keeps project.config.md)
+skills/loop-resume/   # SKILL.md — auto-continue a loop after a usage-limit reset
 skills/loop-feature/  # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs, templates, config example)
 skills/loop-refactor/ # SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
+skills/loop-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + remediation templates)
 install.sh            # installs all skills + the agents into a target, stamping its gate commands
 ```
 
@@ -89,6 +117,11 @@ The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-ch
 - **Spec Kit** — `.specify/` + the `speckit-*` skills. The loops orchestrate these.
   `/loop-init` installs this for you; or init by hand with
   `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
+- **Superpowers** *(loop-fix only)* — the [obra/Superpowers](https://github.com/obra/Superpowers)
+  plugin, for its `systematic-debugging` + `verification-before-completion` skills. Install in Claude
+  Code: `/plugin marketplace add obra/superpowers-marketplace` then
+  `/plugin install superpowers@superpowers-marketplace` (or `…@claude-plugins-official`), then reload.
+  `/loop-init` checks for it.
 - **Design access** *(loop-feature only)* — the `DesignSync` tool / claude.ai login (`/design-login`).
 - **Playwright** *(loop-feature, web surfaces only)* — for rendering the design reference + web parity.
   Mobile / refactor work doesn't need it.

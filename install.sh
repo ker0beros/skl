@@ -71,6 +71,12 @@ if [ ! -d "$TARGET/.specify" ]; then
   echo "           init it with:  uvx --from git+https://github.com/github/spec-kit.git specify init --here"
 fi
 
+# ---- superpowers note (can't auto-install a Claude Code plugin from bash) ---
+echo "  NOTE: /loop-fix needs the Superpowers plugin (obra/Superpowers). Install it in Claude Code:"
+echo "          /plugin marketplace add obra/superpowers-marketplace"
+echo "          /plugin install superpowers@superpowers-marketplace"
+echo "        then reload. (/loop-init also checks for it.)"
+
 # ---- helpers ---------------------------------------------------------------
 lc() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 has_make_target() { [ -f "$TARGET/Makefile" ] && grep -qE "^$1:" "$TARGET/Makefile"; }
@@ -212,4 +218,5 @@ echo "  1) Reload Claude Code in $PROJECT_NAME so the skills + QA agents registe
 echo "  2) Run /loop-init FIRST — it installs Spec Kit (if missing) + authors the constitution."
 echo "  3) /loop-feature needs design access (DesignSync): sign in to claude.ai or run /design-login."
 echo "  4) Run:  /loop-feature <design project> — <intent>     or     /loop-refactor [scope]"
+echo "  5) For /loop-fix: install the Superpowers plugin (see the NOTE above) + reload."
 [ -d "$TARGET/.specify" ] || echo "  (i) No .specify/ yet — /loop-init will install Spec Kit for you."
