@@ -58,6 +58,22 @@ install.sh /path/to/project --agents-global        # agents → ~/.claude/agents
 
 After installing, **reload Claude Code** in the target so `/go-loop` and the agents register.
 
+### Remote install (no local checkout)
+
+Clone-to-cache and run in one line — uses your existing git/GitHub auth, so it works on the
+private repo. Re-running updates the cache first, so this doubles as the update command:
+
+```bash
+{ [ -d ~/.go-loop ] && git -C ~/.go-loop pull -q || gh repo clone ker0beros/go-loop ~/.go-loop; } \
+  && ~/.go-loop/install.sh "$PWD"
+```
+
+Pass a target + flags as usual, e.g. `~/.go-loop/install.sh /path/to/project --surface mobile`.
+
+> A bare `curl … install.sh | bash` is **not** offered: the repo is private (the raw URL needs a
+> token) and the installer needs the bundled `agents/` + `skills/` beside it, which a piped script
+> lacks. The clone-to-cache one-liner above is the equivalent that actually works.
+
 ## Per-project config
 
 `install.sh` generates `resources/project.config.md` from `project.config.example.md`. The skill reads
