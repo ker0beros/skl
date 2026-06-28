@@ -1,6 +1,6 @@
 # loop-feature — QA pass matrix
 
-This is the gate definition for Phase B step 11–12 of `SKILL.md`. The `/loop-feature` driver
+This is the gate definition for Phase B step 12–13 of `SKILL.md`. The `/loop-feature` driver
 owns the pass/fail call; the agents only **report**. A finding's severity is whatever the
 agent assigns (Critical / High / Medium / Low).
 

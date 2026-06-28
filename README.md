@@ -145,7 +145,7 @@ resets), so the same loop resumes in the same context — the loops pick up from
 ## What's in here
 
 ```
-agents/               # 7 QA subagents (shared by the loops)
+agents/               # 8 subagents — 7 QA gate agents + business-analyst (Phase A design↔spec cross-check)
 skills/loop-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
 skills/loop-design/   # SKILL.md + resources/ (design-system checklist + Claude Design prompt template)
 skills/loop-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
@@ -162,7 +162,8 @@ install.sh            # installs all skills + the agents into a target, stamping
 
 The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-checker`,
 `code-quality-pragmatist`, `karen` (reality check), `task-completion-validator`,
-`ui-comprehensive-tester` — plus `ultrathink-debugger` (the failure-time fixer).
+`ui-comprehensive-tester` — plus `ultrathink-debugger` (the failure-time fixer), and `business-analyst`
+(used in `/loop-feature` Phase A to cross-check the design against the spec).
 
 ## Prerequisites (on the target project)
 
@@ -255,3 +256,5 @@ everything **including** regenerating `project.config.md`.
 ## Credits
 
 QA agents are vendored from [darcyegb/ClaudeCodeAgents](https://github.com/darcyegb/ClaudeCodeAgents).
+The `business-analyst` agent is vendored (and adapted with a design↔spec cross-check) from
+[VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents).
