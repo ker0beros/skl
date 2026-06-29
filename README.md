@@ -145,7 +145,7 @@ resets), so the same loop resumes in the same context — the loops pick up from
 ## What's in here
 
 ```
-agents/               # 8 subagents — 7 QA gate agents + business-analyst (Phase A design↔spec cross-check)
+agents/               # 9 subagents — 7 QA gate agents + business-analyst (loop-feature/plan) + refactoring-specialist (loop-refactor)
 skills/loop-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
 skills/loop-design/   # SKILL.md + resources/ (design-system checklist + Claude Design prompt template)
 skills/loop-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
@@ -162,8 +162,9 @@ install.sh            # installs all skills + the agents into a target, stamping
 
 The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-checker`,
 `code-quality-pragmatist`, `karen` (reality check), `task-completion-validator`,
-`ui-comprehensive-tester` — plus `ultrathink-debugger` (the failure-time fixer), and `business-analyst`
-(used in `/loop-feature` Phase A to cross-check the design against the spec).
+`ui-comprehensive-tester` — plus `ultrathink-debugger` (the failure-time fixer), `business-analyst`
+(used in `/loop-feature` + `/loop-plan` Phase A to cross-check the design against the spec), and
+`refactoring-specialist` (used in `/loop-refactor` to audit smells and perform behavior-preserving refactors).
 
 ## Prerequisites (on the target project)
 
@@ -256,5 +257,6 @@ everything **including** regenerating `project.config.md`.
 ## Credits
 
 QA agents are vendored from [darcyegb/ClaudeCodeAgents](https://github.com/darcyegb/ClaudeCodeAgents).
-The `business-analyst` agent is vendored (and adapted with a design↔spec cross-check) from
+The `business-analyst` (design↔spec cross-check) and `refactoring-specialist` (audit + behavior-preserving
+refactors) agents are vendored and adapted from
 [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents).

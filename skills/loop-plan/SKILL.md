@@ -2,7 +2,7 @@
 name: loop-plan
 description: "Plan a feature WITHOUT building it: optional design ingest → speckit specify → speckit clarify (asking you questions), producing a numbered, ready-to-run plan (a speckit feature) marked Loop-Status: ready. A claude.ai/design reference is OPTIONAL (design-driven or text-only, same as /loop-feature). Run it as many times as you like to queue up plans, then execute a batch with /loop-run. This command never builds or runs the QA loop."
 argument-hint: "a one-line intent of what to plan — optionally prefixed with a claude.ai/design project name or UUID for a designed UI feature"
-compatibility: "Requires the .specify/ spec-kit structure and the speckit-* skills. Design-driven (UI) mode also uses the DesignSync tool and reuses loop-feature's render-keyframes.mjs (+ Playwright for web rendering); text-only mode needs neither. Reads resources/project.config.md for surface defaults. Pairs with /loop-run, which executes the plans this produces."
+compatibility: "Requires the .specify/ spec-kit structure and the speckit-* skills. Design-driven (UI) mode also uses the DesignSync tool, reuses loop-feature's render-keyframes.mjs (+ Playwright for web rendering), and spawns the business-analyst agent (.claude/agents/) to cross-check the design against the spec; text-only mode needs none of those. Reads resources/project.config.md for surface defaults. Pairs with /loop-run, which executes the plans this produces."
 metadata:
   author: "khairul"
   version: "1.0.0"
@@ -70,11 +70,27 @@ loop-feature's renderer (`.claude/skills/loop-feature/resources/render-keyframes
    **Visual Targets** + **Animation Inventory** tables.
 7. **Clarify.** Invoke `speckit-clarify` (Skill tool) — up to 5 targeted questions; encode the answers
    back into `spec.md`. This Q&A is the core of `/loop-plan`.
-8. **Mark ready + STOP.** Write a `Loop-Status: ready` line near the top of `spec.md`. Then:
+8. **Business-analyst cross-check *(design mode only; skip entirely in text-only mode)*.** Spawn the
+   `business-analyst` agent (Agent tool) seeded with the **rendered design** (`specs/<feature>/references/`
+   + the pulled-design summary) and `spec.md`. Have it **cross-check the design against the spec** and
+   return severity-tagged findings: coverage gaps (screens/components/fields and per-screen **states**
+   empty/loading/error/success), contradictions, scope mismatch, untestable/ambiguous acceptance
+   criteria, and cross-platform gaps. **Fold its findings into `spec.md`** (add the missing user stories
+   + acceptance criteria; record any genuine design↔spec **conflicts** in the spec so whoever runs the
+   plan sees them). See `agents/business-analyst.md`.
+9. **Mark ready + STOP.** Write a `Loop-Status: ready` line near the top of `spec.md`. Then:
    - Return the repo to the **base branch** you started on (so the next `/loop-plan` creates its
      feature off the same base, not nested inside this plan's branch).
-   - Present the **assigned plan number NNN**, a concise summary (user stories, surface, + Visual
-     Targets/Animation Inventory in design mode), and the path to `spec.md`.
+   - **Present it in plain language** — write for a **non-technical reader**, translate jargon, keep it
+     skimmable:
+     - **Plan NNN — <slug>** — 1–2 plain sentences on what this feature is and why.
+     - **What it'll let you do** — the user stories as everyday "You can …" bullets.
+     - **What it looks like** *(design mode)* — point to the design images, described in plain words.
+     - **Where it works** — platforms in plain terms (e.g. "on phone and on the web"), not the
+       internal `surface` label.
+     - **Anything to note** — any business-analyst conflicts / open questions in plain language.
+     - **Full details (optional)** — "the complete spec is at `specs/<feature>/spec.md`."
+     - End with: "Run `/loop-run` when you're ready to build this (and any other queued plans)."
    - Fire `bash ~/.claude/notify-telegram.sh "[<project>] /loop-plan ✅ plan NNN ready — <slug>"`.
    - **Do NOT build, run tasks, or start the QA loop** — that's `/loop-run`'s job.
 
