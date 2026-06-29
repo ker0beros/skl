@@ -1,7 +1,7 @@
 # loop-feature — project config (EXAMPLE / template)
 #
-# install.sh generates `project.config.md` from this template, stamping in the values it
-# detects for the target project. The loop-feature SKILL reads `project.config.md` at runtime for
+# /loop-init generates `project.config.md` from this template, auto-detecting the values for the
+# project (surface + gate commands). The loop-feature SKILL reads `project.config.md` at runtime for
 # the surface default and the gate commands. You can hand-edit `project.config.md` anytime.
 
 project_name: <project>

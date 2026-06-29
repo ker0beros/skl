@@ -41,7 +41,7 @@ A config missing the field is read as **standard**.
 
 ## Steps
 
-1. **Find the configs.** List `.claude/skills/*/resources/project.config.md` (every installed spec-loop skill carries one). If there are **none**, tell the user the skills aren't installed yet (run `install.sh`) and stop — there's nothing to set.
+1. **Find the configs.** List `.claude/skills/*/resources/project.config.md` (every installed spec-loop skill carries one). If there are **none**, tell the user to run `/loop-init` first (it generates them) and stop — there's nothing to set.
 2. **Read the current mode.** `grep` `gate_strictness:` in the first config (treat absent as `standard`). You'll show it as the current position and pre-select it.
 3. **Decide the target mode.**
    - If `$ARGUMENTS` named one → use it.

@@ -159,8 +159,10 @@ skills/loop-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + r
 skills/loop-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans
 skills/loop-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses loop-feature's gate)
 skills/loop-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
-install.sh            # installs all skills + the agents into a target, stamping its gate commands
 ```
+
+Install = pull this repo and copy `skills/` + `agents/` into your project's `.claude/` (there is no
+install script). `/loop-init` then generates each skill's `project.config.md`.
 
 The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-checker`,
 `code-quality-pragmatist`, `karen` (reality check), `task-completion-validator`,
@@ -185,76 +187,53 @@ The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-ch
 
 ## Install
 
-```bash
-# from anywhere:
-~/Documents/spec-loop/install.sh /path/to/your/project
-
-# or from inside the target:
-cd /path/to/your/project && ~/Documents/spec-loop/install.sh
-```
-
-The installer auto-detects the surface (web / mobile / both) and gate commands (Makefile targets →
-melos → flutter / npm), then writes `.claude/skills/<skill>/resources/project.config.md` into each
-skill. Override anything:
+Installation **pulls the repo from GitHub** and copies the skills + agents into your project's
+`.claude/` — there is no install script. Uses your existing git/GitHub auth (the repo is private). From
+**inside the target project**:
 
 ```bash
-install.sh /path/to/project --surface mobile --analyze-cmd "make analyze" --test-cmd "make test"
-install.sh /path/to/project --with-playwright      # bootstrap Playwright into loop-feature (any project)
-install.sh /path/to/project --force                # overwrite files that differ
-install.sh /path/to/project --agents-global        # agents → ~/.claude/agents (shared across projects)
+# clone-to-cache (or refresh it), then copy skills + agents into this project's .claude/
+{ [ -d ~/.spec-loop ] && git -C ~/.spec-loop fetch -q origin && git -C ~/.spec-loop reset -q --hard origin/main \
+   || gh repo clone ker0beros/spec-loop ~/.spec-loop; } \
+  && mkdir -p .claude/skills .claude/agents \
+  && rsync -a --exclude=project.config.md ~/.spec-loop/skills/ .claude/skills/ \
+  && rsync -a ~/.spec-loop/agents/ .claude/agents/
 ```
 
-After installing:
+(Prefer agents shared across projects? `rsync -a ~/.spec-loop/agents/ ~/.claude/agents/` instead.) The
+`--exclude=project.config.md` keeps any per-project config you already have; `/loop-init` generates it
+on first run.
 
-1. **Install the Superpowers plugin** (needed by `/loop-fix`) — in Claude Code, run:
+Then:
+
+1. **Reload Claude Code** so the skills (`/loop-init`, `/loop-feature`, `/loop-refactor`, `/loop-fix`,
+   `/loop-plan`, `/loop-run`, `/loop-design`, `/loop-gate`, `/loop-update`, `/loop-resume`,
+   `/loop-help`) and the agents register.
+2. **Install the Superpowers plugin** (needed by `/loop-fix` + `/loop-design`) — in Claude Code:
    ```
    /plugin marketplace add obra/superpowers-marketplace
    /plugin install superpowers@superpowers-marketplace
    ```
-   (or `/plugin install superpowers@claude-plugins-official`). It's a `/plugin` command, so it can't be
-   installed by `install.sh` — do it in the Claude Code session.
-2. **Reload Claude Code** in the target so the new skills (`/loop-init`, `/loop-feature`,
-   `/loop-refactor`, `/loop-fix`, `/loop-gate`, `/loop-update`, `/loop-resume`), the agents, and the
-   Superpowers plugin all register.
-3. Run **`/loop-init`** first to set up Spec Kit and author the constitution (it also checks that
-   Superpowers is present).
-
-### Remote install (no local checkout)
-
-Clone-to-cache and run in one line — uses your existing git/GitHub auth, so it works on the private
-repo. Re-running updates the cache first, so this doubles as the update command:
-
-```bash
-{ [ -d ~/.spec-loop ] && git -C ~/.spec-loop pull -q || gh repo clone ker0beros/spec-loop ~/.spec-loop; } \
-  && ~/.spec-loop/install.sh "$PWD"
-```
-
-> A bare `curl … install.sh | bash` is **not** offered: the repo is private (the raw URL needs a
-> token) and the installer needs the bundled `agents/` + `skills/` beside it, which a piped script
-> lacks. The clone-to-cache one-liner above is the equivalent that actually works.
+   (or `/plugin install superpowers@claude-plugins-official`), then reload again.
+3. Run **`/loop-init`** first — it sets up Spec Kit, **generates each skill's `project.config.md`**
+   (auto-detecting surface + gate commands), checks Superpowers, and authors the constitution.
 
 ## Per-project config
 
-`install.sh` generates `resources/project.config.md` (from `project.config.example.md`) into **each**
-skill. The skills read it at runtime for `surface_default`, the `mobile_gates` / `web_gates`
-commands, and the `web_dev_server`. Edit by hand anytime; re-running the installer keeps your edits
-unless you pass `--force`.
+`/loop-init` generates `resources/project.config.md` into **each** skill (auto-detecting the surface
+web / mobile / both and the gate commands: Makefile targets → melos → flutter / npm). The skills read
+it at runtime for `surface_default`, the `mobile_gates` / `web_gates` commands, `web_dev_server`, and
+`gate_strictness` (set by `/loop-gate`). Edit by hand anytime — `/loop-init` and `/loop-update` never
+overwrite an existing `project.config.md`.
 
 ## Updating
 
-From inside a project that already has spec-loop installed, just run **`/loop-update`** — it refreshes
-the clone-to-cache (`~/.spec-loop`), shows what's new, and re-installs with `--update` (skills + agents
-to latest, **keeping** each `project.config.md`). Reload Claude Code afterward.
+From inside a project that already has spec-loop installed, just run **`/loop-update`** — it pulls
+`origin/main`, shows what's new, and syncs the skill + agent files (**keeping** each
+`project.config.md`). Reload Claude Code afterward.
 
-By hand, the equivalent is the clone-to-cache one-liner followed by `--update`:
-
-```bash
-{ [ -d ~/.spec-loop ] && git -C ~/.spec-loop pull -q || gh repo clone ker0beros/spec-loop ~/.spec-loop; } \
-  && ~/.spec-loop/install.sh "$PWD" --update
-```
-
-`--update` overwrites the skill + agent files but **preserves** your config; `--force` overwrites
-everything **including** regenerating `project.config.md`.
+By hand, it's the same pull-and-copy one-liner as **Install** above (the `--exclude=project.config.md`
+makes it safe to re-run as an update).
 
 ## Credits
 

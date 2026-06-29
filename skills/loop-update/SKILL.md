@@ -2,7 +2,7 @@
 name: loop-update
 description: "Update this project's spec-loop install to the latest version on GitHub. Pulls the latest from the main branch of ker0beros/spec-loop and syncs all the loop-* skills + the shared agents into this project's .claude/, PRESERVING each resources/project.config.md (your surface, gate commands, gate_strictness). Does not run the installer script. Reload Claude Code afterward so the refreshed skills register."
 argument-hint: "(none) — updates the current project from origin/main"
-compatibility: "Uses your existing git/GitHub auth to reach the private ker0beros/spec-loop repo (gh CLI for the first clone, git fetch thereafter). Syncs files directly (no install.sh) and preserves project.config.md. Needs git + gh."
+compatibility: "Uses your existing git/GitHub auth to reach the private ker0beros/spec-loop repo (gh CLI for the first clone, git fetch thereafter). Syncs the skill + agent files directly and preserves project.config.md. Needs git + gh."
 metadata:
   author: "khairul"
   version: "1.1.0"
@@ -24,7 +24,7 @@ It makes this project's installed copy match `origin/main` exactly:
 …and **preserves** every `.claude/skills/*/resources/project.config.md` (surface default, gate
 commands, and your `gate_strictness` choice from `/loop-gate`).
 
-It does **not** run `install.sh`, and does **not** touch Spec Kit / the `speckit-*` skills, your
+It does **not** touch Spec Kit / the `speckit-*` skills, your
 `specs/`, or your code.
 
 ---
@@ -42,7 +42,7 @@ It does **not** run `install.sh`, and does **not** touch Spec Kit / the `speckit
 2. **Show what's new.** If `OLD` is set and `OLD != NEW`, print `git -C ~/.spec-loop log --oneline
    "$OLD..$NEW"` so the user sees the incoming changes. If `OLD == NEW`, report **"already up to date"**
    and **stop** — nothing to sync.
-3. **Sync the files directly into this project** (no `install.sh`), preserving config:
+3. **Sync the files directly into this project**, preserving config:
    - **Skills** — for each skill dir in `~/.spec-loop/skills/*/`, copy its `SKILL.md` and everything
      under `resources/` into `.claude/skills/<skill>/`, **excluding `resources/project.config.md`**
      (never overwrite it). New skills in `main` are added; existing ones are overwritten to match `main`.
@@ -62,7 +62,7 @@ It does **not** run `install.sh`, and does **not** touch Spec Kit / the `speckit
 ## Rules & invariants
 
 - **Pull from `main`, sync directly.** The source of truth is `origin/main` of `ker0beros/spec-loop`;
-  the cache is force-reset to it. `/loop-update` does **not** invoke `install.sh`.
+  the cache is force-reset to it, then the skill + agent files are copied into `.claude/`.
 - **Config is preserved.** `project.config.md` is never overwritten, regenerated, or deleted — your
   surface, gate commands, and `gate_strictness` survive untouched.
 - **Skills + agents only.** Doesn't update Spec Kit, your `specs/`, or your code.
