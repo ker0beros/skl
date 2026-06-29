@@ -72,7 +72,7 @@ visual spec, and verifies design **and animation** parity (keyframe + behavior c
 ```
 /loop-plan <one-line intent>                                # text-only
 /loop-plan <claude-design project name or uuid> — <intent>  # design-driven (UI)
-/loop-run [3 5 7 | all]
+/loop-run [3 5 7 | all] [--auto]
 ```
 
 - **`/loop-plan`** does only the planning half — optional design ingest → `specify` → `clarify`
@@ -82,18 +82,20 @@ visual spec, and verifies design **and animation** parity (keyframe + behavior c
 - **`/loop-run`** lists every `ready` plan, asks which to run (**one / multiple / all**), then runs each
   through the **same QA loop as `/loop-feature`** — committing each passing plan `feat(NNN)` on a
   `loop-run/<stamp>` integration branch and moving to the next automatically. Never pushes or merges to
-  main/dev; you review the branch at the end. Plans you don't select stay `ready` for later.
+  main/dev; you review the branch at the end. Plans you don't select stay `ready` for later. Add
+  **`--auto`** to skip the selection prompt and run all ready plans, fully unattended.
 
 It reuses loop-feature's QA pass-matrix + renderer (one source of truth), so the gate is identical.
 
 ## `/loop-refactor` — codebase → cleaner codebase
 
 ```
-/loop-refactor [optional scope: path / package / theme]
+/loop-refactor [optional scope: path / package / theme] [--auto]
 ```
 Reads the **target organization from the constitution** (if the constitution is silent on code
 organization, it web-searches best practices, gets your sign-off, and seeds the constitution — the
-loop's one approval gate), audits the code into a prioritized **backlog**, then **autonomously**
+loop's one approval gate; **`--auto`** removes even that, auto-picking the best-practice organization),
+uses a `refactoring-specialist` agent to audit the code into a prioritized **backlog**, then **autonomously**
 refactors each item through the speckit workflow, QA-gates it (behavior-preservation centric),
 commits it on a `loop-refactor/*` review branch, and **re-audits** until nothing Critical/High
 remains. Never pushes or merges to main/dev — you review the integration branch.

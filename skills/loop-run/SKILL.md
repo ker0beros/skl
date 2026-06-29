@@ -1,7 +1,7 @@
 ---
 name: loop-run
 description: "Execute ready-to-run plans created by /loop-plan. Lists every plan marked Loop-Status: ready, asks which to run (one / multiple / all), then runs each through the same QA-gated build loop as /loop-feature (plan→tasks→analyze→checklist→implement→QA-gates, max 10 iterations per plan). Commits each passing plan as feat(NNN) on a loop-run/<stamp> integration branch and continues to the next — a hands-off batch runner. Never pushes or merges to main/dev."
-argument-hint: "(optional) plan numbers to run, e.g. '3 5 7' or 'all' — empty shows the picker"
+argument-hint: "(optional) plan numbers e.g. '3 5 7' or 'all'; empty shows the picker; add --auto to skip the picker and run all (fully autonomous)"
 compatibility: "Requires the .specify/ spec-kit structure, the speckit-* skills, the QA agents in .claude/agents/ (Jenny, karen, claude-md-compliance-checker, code-quality-pragmatist, task-completion-validator, ui-comprehensive-tester, ultrathink-debugger), and the loop-feature skill installed alongside (it reuses loop-feature's pass-matrix.md, render-keyframes.mjs, and remediation-brief-template.md). Surface + gate commands + gate_strictness come from resources/project.config.md (written by install.sh)."
 metadata:
   author: "khairul"
@@ -19,6 +19,10 @@ $ARGUMENTS
 
 If the input names **plan numbers** (e.g. `3 5 7`) or `all`, run those without prompting. Otherwise
 (empty / unclear) show the interactive picker.
+
+**`--auto`** — fully autonomous: **don't ask anything.** `--auto` alone runs **all** ready plans (the
+best default); `--auto 3 5` runs just those. With `--auto`, never show the selection picker and never
+fire the await-input ping. (Strip `--auto` from the argument before reading plan numbers.)
 
 ---
 
@@ -49,7 +53,9 @@ project's **constitution** + `CLAUDE.md`. The QA gate is **identical** to loop-f
    (design vs text-only), and the one-line intent. If **none are ready**, tell the user to create plans
    with `/loop-plan` and **stop**.
 3. **Select.**
-   - If `$ARGUMENTS` named plan numbers or `all`, use that selection.
+   - **`--auto`** → skip the question entirely: run **all** ready plans (or the plan numbers given
+     alongside `--auto`). No picker, no await ping.
+   - Else if `$ARGUMENTS` named plan numbers or `all` → use that selection.
    - Otherwise: fire `bash ~/.claude/notify-telegram.sh "[<project>] /loop-run awaiting plan selection"`,
      then `AskUserQuestion` (**multiSelect: true**) listing each ready plan (`NNN · slug · intent`) plus
      an **All ready plans** option. Run the chosen subset.
@@ -94,6 +100,9 @@ Then, for each selected plan (lowest `NNN` first), with `iter = 1`:
 
 - **Batch executor, not a planner.** `/loop-run` never re-specs or re-clarifies — it builds from each
   plan's `spec.md`. Create/edit plans with `/loop-plan`.
+- **`--auto` = fully autonomous.** With `--auto` it never asks which plans to run — it runs all ready
+  plans (or the numbers given) and proceeds plan-to-plan without any prompt. (It already runs each plan
+  hands-off; `--auto` just removes the one selection question.)
 - **Integration branch + commit per plan; never push/merge to main/dev.** The user reviews the
   `loop-run/*` branch and merges when satisfied.
 - **Per-plan cap 10 → defer.** Deferred plans are reported, never silently dropped; their

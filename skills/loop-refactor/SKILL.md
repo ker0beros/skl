@@ -1,7 +1,7 @@
 ---
 name: loop-refactor
 description: "Autonomously refactor a codebase toward its declared architecture. Maps the code organization from the constitution (researching best practices and stopping for your sign-off to seed it if the constitution is silent), uses a refactoring-specialist agent to audit deviations into a prioritized backlog, then refactors each item through the speckit workflow (plan→tasks→analyze→checklist) with the refactoring-specialist carrying out the behavior-preserving transformation, QA-gates it, commits on a review branch, and loops — re-auditing until no Critical/High refactors remain and all gates are green."
-argument-hint: "(optional) a path / package / theme to scope the refactor — empty = whole codebase"
+argument-hint: "(optional) a path / package / theme to scope the refactor — empty = whole codebase; add --auto for zero prompts (auto-seeds the constitution org if missing)"
 compatibility: "Requires the .specify/ spec-kit structure, the speckit-* skills, and the agents in .claude/agents/ (the QA panel — Jenny, karen, claude-md-compliance-checker, code-quality-pragmatist, task-completion-validator, ui-comprehensive-tester, ultrathink-debugger — plus the refactoring-specialist, which audits the code and performs the behavior-preserving refactors). Surface + gate commands come from resources/project.config.md (written by install.sh)."
 metadata:
   author: "khairul"
@@ -19,6 +19,8 @@ $ARGUMENTS
 
 If non-empty, treat the input as a **scope** (a path, package, or theme) to focus the refactor on. If empty, the scope is the **whole codebase**.
 
+**`--auto`** — fully autonomous: removes the **one** human gate. If the constitution doesn't declare the code organization, `--auto` does **not** stop for sign-off — it picks the **best-practice organization it judges best** (the top web-searched recommendation for the stack), seeds the constitution with it, notes the choice, and proceeds. (Strip `--auto` from the argument before reading the scope.)
+
 ---
 
 ## What this command does
@@ -29,7 +31,7 @@ If non-empty, treat the input as a **scope** (a path, package, or theme) to focu
 - **Phase 1 — Audit**: list every deviation as a prioritized **refactor backlog**.
 - **Phase 2 — Loop**: refactor each backlog item through the speckit workflow, QA-gate it, commit it on a review branch, then move to the next — **re-auditing** until no Critical/High items remain and all gates are green.
 
-It is **autonomous**, with **one** approval gate: a one-time stop in Phase 0 *if* the constitution doesn't declare the code organization — it researches best practices and asks you to sign off before seeding the constitution. After that it does **not** stop for approval between phases. The cardinal rule is **behavior preservation**: a refactor changes structure, never observable behavior. The automated gates (analyze + tests) are the regression net; an item is only "done" when they stay green **and** its QA panel passes.
+It is **autonomous**, with **one** approval gate: a one-time stop in Phase 0 *if* the constitution doesn't declare the code organization — it researches best practices and asks you to sign off before seeding the constitution. After that it does **not** stop for approval between phases. **With `--auto`, even that gate is removed** — it picks the best-practice organization itself and proceeds (zero prompts). The cardinal rule is **behavior preservation**: a refactor changes structure, never observable behavior. The automated gates (analyze + tests) are the regression net; an item is only "done" when they stay green **and** its QA panel passes.
 
 **Read `resources/project.config.md` (next to this skill) FIRST** — it carries this project's `surface_default`, gate commands (`mobile_gates` / `web_gates`), and dev-server command. Honor the project's **constitution** at `.specify/memory/constitution.md` and `CLAUDE.md` throughout — they define the target architecture you are refactoring toward.
 
@@ -43,7 +45,10 @@ This command does **not** use `speckit-all`; it chains the individual `speckit-*
 2. Run a **parallel, read-only analysis** (Agent tool, one message): spawn the **`refactoring-specialist`** agent to detect **smells**, measure complexity, assess test coverage, and **rank refactoring priorities** (files over LOC ceilings, layer/boundary violations, duplication, dead code, cyclic dependencies, inconsistent patterns, missing tests, god-objects, leaky abstractions), and `Explore` / general agents to map the package/module layout, layering/dependency direction, and naming + file conventions. Respect the `$ARGUMENTS` scope if given. (Read-only — no code changes in this phase.) See `agents/refactoring-specialist.md`.
 3. **Establish the target from the constitution.** The **code organization must be declared in `.specify/memory/constitution.md`** — that is the source of truth this refactor drives toward. Two paths:
    - **Constitution declares it** (topology / layering / package boundaries / naming / LOC budgets) → write `.loop-refactor/organization.md` as the **target**, **derived from** the constitution + CLAUDE.md + the dominant existing patterns (do **not** invent an opinionated target when the project already declares one). Include: the intended layer/package topology, the conventions, and the "definition of well-organized" this refactor drives toward. Use `resources/organization-template.md` as the shape.
-   - **Constitution is silent on it** → **WebSearch** best-practice code organization for this project's stack/domain (cite the sources), synthesize a recommended organization (topology + conventions + LOC budgets, reconciled with the dominant existing patterns), then **present it to the user and STOP for approval** — this is the loop's **one human gate**. On approval (incorporate any edits the user gives), write the agreed organization **into `.specify/memory/constitution.md`** as a *Code Organization* principle, then derive `.loop-refactor/organization.md` from the now-updated constitution exactly as above. Do not proceed to Phase 1 until the constitution declares it.
+   - **Constitution is silent on it** → **WebSearch** best-practice code organization for this project's stack/domain (cite the sources), synthesize a recommended organization (topology + conventions + LOC budgets, reconciled with the dominant existing patterns). Then:
+     - **Default** → **present it to the user and STOP for approval** (the loop's **one human gate**). On approval (incorporate any edits the user gives), write the agreed organization into the constitution.
+     - **`--auto`** → **do not stop** — adopt the **highest-confidence** recommendation from the WebSearch (the one you judge best for this stack/domain), write it into the constitution, and clearly note what you chose (in your output + `.loop-refactor/report.md`) so the user can review it later.
+     Either way, write the organization **into `.specify/memory/constitution.md`** as a *Code Organization* principle, then derive `.loop-refactor/organization.md` from the now-updated constitution exactly as above. Do not proceed to Phase 1 until the constitution declares it.
 
 ## Phase 1 — Audit (the refactor backlog)
 
@@ -75,7 +80,7 @@ Then, for each backlog item, highest-severity first, with `iter = 1`:
 ## Rules & invariants
 
 - **Behavior preservation is cardinal.** Structure changes; observable behavior must not. Automated gates (analyze + tests) staying green is the proof; `karen` independently confirms by running it. Tests may be updated for moved/renamed symbols, but assertions/expectations must not be weakened to make a refactor "pass."
-- **Autonomous after Phase 0** — the only approval gate is a one-time Phase 0 stop *when the constitution doesn't declare the code organization* (WebSearch best practices → user sign-off → seed the constitution). Otherwise no approval gate between phases; the user steers by interrupting and reviews the integration branch at the end.
+- **Autonomous after Phase 0** — the only approval gate is a one-time Phase 0 stop *when the constitution doesn't declare the code organization* (WebSearch best practices → user sign-off → seed the constitution). Otherwise no approval gate between phases; the user steers by interrupting and reviews the integration branch at the end. **`--auto` removes that one gate** — it auto-seeds the best-practice organization (noting the choice) and runs end-to-end with zero prompts.
 - **Commit per item, never push, never merge to main/dev.** Passing items land on the `loop-refactor/*` integration branch only. The user merges when satisfied.
 - **Per-item cap 10 → defer**, re-audit cap 3. Deferred items are always reported, never silently dropped.
 - **Pass threshold = 0 Critical / 0 High / 0 Medium**, then by mode: `standard` (default) also requires **0 Low** (Info logged); `strict` also requires **0 Low + 0 Info** (analyze fatal-on-info); `low` requires neither (Low + Info logged). Read `gate_strictness` from `project.config.md` (missing ⇒ `standard`); toggle with `/loop-gate`. See `resources/refactor-pass-matrix.md`.
