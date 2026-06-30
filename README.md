@@ -153,7 +153,7 @@ skills/loop-design/   # SKILL.md + resources/ (design-system checklist + Claude 
 skills/loop-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
 skills/loop-update/   # SKILL.md — pull latest from GitHub + re-install (keeps project.config.md)
 skills/loop-resume/   # SKILL.md — auto-continue a loop after a usage-limit reset
-skills/loop-feature/  # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs, templates, config example)
+skills/loop-feature/  # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs [web-only], mobile-render + no-overflow-testing [mobile], templates, config example)
 skills/loop-refactor/ # SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
 skills/loop-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + remediation templates)
 skills/loop-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans

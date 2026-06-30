@@ -9,6 +9,12 @@
 // The SAME script captures the design reference (Phase A) and the live implementation
 // (Phase B, ui-comprehensive-tester) so the two are directly comparable.
 //
+// SCOPE: WEB-ONLY. This drives a Playwright-rendered web page (a Claude Design HTML bundle or a live
+// http:// route). There is no Flutter/mobile equivalent — design-driven MOBILE parity does NOT use
+// this script. Mobile renders via the `mobile_render` recipe in project.config.md: boot a
+// simulator/emulator (default iOS), drive it via Mobile MCP, and screenshot each screen into
+// specs/<feature>/verification/. See resources/mobile-render.md for that runbook.
+//
 // Usage:
 //   node render-keyframes.mjs --html <file.html> --out <dir> [--viewport 1440x900,390x844]
 //                             [--timestamps 0,600,1200] [--selector "#root"] [--name <prefix>]
