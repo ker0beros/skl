@@ -1,4 +1,4 @@
-# Provider recipes for `/create-ticket` (GitHub / GitLab / Jira)
+# Provider recipes for `/skl-create-ticket` (GitHub / GitLab / Jira)
 
 > Read this at the **provider readiness check** (Preconditions step 2) and again at **creation**
 > (Step 4). Each section has: the **auth check** (+ how the user fixes it), how to **parse the target**,

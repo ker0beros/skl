@@ -1,12 +1,12 @@
 ---
-name: create-ticket
+name: skl-create-ticket
 description: "Use when the user wants to create, file, open, log, or raise a ticket, issue, bug report, or feature request for this project — on GitHub, GitLab, or Jira. Detects the provider from the git remote and asks only when unsure. Triggers on 'create a ticket', 'file an issue', 'open a bug', 'log a bug', 'raise an issue', 'create a jira ticket', 'file a gitlab issue'."
 argument-hint: "<rough one-line description of the ticket to file> (optionally name the provider, e.g. 'jira: ...')"
 compatibility: "Needs the tooling for the chosen provider: GitHub → the gh CLI authenticated with 'repo' scope; GitLab → the glab CLI authenticated (self-hosted via GITLAB_HOST); Jira → the Atlassian MCP connector. A git remote is used to auto-detect GitHub/GitLab; Jira is chosen explicitly or via the picker."
 metadata:
   author: "khairul"
   version: "1.0.0"
-  source: "skills/create-ticket"
+  source: "skills/skl-create-ticket"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -66,7 +66,7 @@ Resolve in this order — stop at the first that applies:
    **Jira is always offered here** — a git remote cannot reveal a Jira intent. For a self-hosted git
    host, confirm whether it's GitHub Enterprise or self-hosted GitLab and capture the host.
 
-   > Fire `bash ~/.claude/notify-telegram.sh "[<project>] /create-ticket awaiting provider choice"`
+   > Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-create-ticket awaiting provider choice"`
    > before this picker (skip silently if the notifier is absent).
 
 ### 2. Check the chosen provider's tooling (read `resources/providers.md`)
@@ -150,7 +150,7 @@ Then ask with `AskUserQuestion`, options: **Create** / **Edit** / **Cancel**.
 - **Cancel** → stop. Create nothing. Confirm to the user that nothing was filed.
 - **Create** → and only then proceed to Step 4.
 
-> Fire `bash ~/.claude/notify-telegram.sh "[<project>] /create-ticket awaiting Create/Edit/Cancel"`
+> Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-create-ticket awaiting Create/Edit/Cancel"`
 > before showing this gate (skip silently if the notifier is absent).
 
 ### Red flags — STOP
