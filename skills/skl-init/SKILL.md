@@ -1,6 +1,6 @@
 ---
 name: skl-init
-description: "Bootstrap a project for the spec-loop workflow, then author its constitution. Installs the prerequisites (Spec Kit + the speckit-* skills, optional Playwright), then asks your tech stack, web-searches the best-fit code organization (melos, clean architecture, feature-first, …) for you to choose, and runs speckit-constitution to encode code-quality, testing/TDD, UX-consistency, performance, and the chosen code organization. Run this ONCE before /skl-feature or /skl-refactor."
+description: "Bootstrap a project for the spec-loop workflow, then author its constitution. Installs the prerequisites (Spec Kit + the speckit-* skills, optional Playwright), then asks your tech stack, web-searches the best-fit code organization (melos, clean architecture, feature-first, …) for you to choose, and runs speckit-constitution to encode code-quality, testing/TDD, UX-consistency, performance, the chosen code organization, and a Loop Engineering principle (loop-engineering methodology: phased L1→L2→L3 autonomy, human safety gates, cost budgeting, readiness scoring). Run this ONCE before /skl-feature or /skl-refactor."
 argument-hint: "(optional) a tech-stack hint (e.g. 'flutter melos monorepo') — empty = auto-detect + ask"
 compatibility: "Needs uv/uvx (for Spec Kit) and network access (web search + the spec-kit clone). Bootstraps the .specify/ structure + .specify/memory/constitution.md that /skl-feature and /skl-refactor depend on, and generates each skill's resources/project.config.md (surface + gate commands). The spec-loop skills + QA agents are installed by pulling the GitHub repo into .claude/ (see README); skl-init verifies they're present and points to that pull command if any are missing."
 metadata:
@@ -27,7 +27,7 @@ If non-empty, treat the input as a **tech-stack hint** to seed detection + the c
 
 - **Phase 1 — Install prerequisites**: ensure `uv`/`uvx`, initialize **Spec Kit** (`.specify/` + the `speckit-*` skills), verify the spec-loop skills + agents are present (pulled from GitHub), **generate each skill's `project.config.md`** (surface + gate detection), check Superpowers, optionally bootstrap Playwright for web.
 - **Phase 2 — Choose the code organization**: detect/ask the tech stack, **web-search** the best-fit organization, and let you pick (melos, clean architecture, feature-first, …).
-- **Phase 3 — Author the constitution**: run `speckit-constitution` seeded with code-quality + testing/TDD + UX-consistency + performance principles **and the chosen code organization**, then verify it.
+- **Phase 3 — Author the constitution**: run `speckit-constitution` seeded with code-quality + testing/TDD + UX-consistency + performance principles, **the chosen code organization**, and a **Loop Engineering** principle (loop-engineering methodology — phased L1→L2→L3 autonomy, human safety gates, cost budgeting, readiness scoring), then verify it.
 
 It is **idempotent** — safe to re-run; it skips what's already done and resumes.
 
@@ -64,10 +64,11 @@ It is **idempotent** — safe to re-run; it skips what's already done and resume
 ## Phase 3 — Author the constitution
 
 9. **Run the constitution.** Invoke `speckit-constitution` (Skill tool), seeded with this directive — the base line **verbatim**, with the chosen organization spelled out where it says *chosen code organization*:
-   > Create principles focused on code quality, testing standards, user experience consistency, and performance requirements, develop using TDD, and **<the chosen code organization: stack + package/layer topology + allowed dependency direction + naming conventions + LOC budgets>**.
+   > Create principles focused on code quality, testing standards, user experience consistency, and performance requirements, develop using TDD, **<the chosen code organization: stack + package/layer topology + allowed dependency direction + naming conventions + LOC budgets>**, and a **Loop Engineering** principle: for any autonomous / agentic / loop or scheduled-automation capability the project ships, follow the [loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology — phased autonomy rollout **L1 (report-only) → L2 (assisted fixes) → L3 (unattended)**, explicit human safety gates + denylist protections, transparent cost/token budgeting with an explicit stop rule, a measurable readiness score gating promotion to a higher autonomy level, maker/checker (sub-agent) separation with durable memory/state, and engineer comprehension-accountability for loop behavior.
 10. **Verify + report.** Confirm `.specify/memory/constitution.md` exists and contains:
-    - a **Code Organization** principle that states the topology + dependency direction concretely (this is exactly what `/skl-refactor` Phase 0 keys on — if it's vague, edit the file to make it explicit), **and**
-    - the **code-quality**, **testing/TDD**, **UX-consistency**, and **performance** principles.
+    - a **Code Organization** principle that states the topology + dependency direction concretely (this is exactly what `/skl-refactor` Phase 0 keys on — if it's vague, edit the file to make it explicit),
+    - the **code-quality**, **testing/TDD**, **UX-consistency**, and **performance** principles, **and**
+    - a **Loop Engineering** principle capturing the loop-engineering methodology (phased L1→L2→L3 autonomy, human safety gates + denylists, cost/token budgeting with a stop rule, readiness scoring, maker/checker + durable state). If it's missing or vague, edit the file to make it explicit — every loop's QA compliance gate reads it.
     Then fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-init done — constitution seeded (<stack>, <org>)"`, present a short summary (stack, chosen org, the principle headings, the constitution path), and point to next steps: `/skl-feature <design> — <intent>` or `/skl-refactor [scope]`.
 
 ---
@@ -77,6 +78,7 @@ It is **idempotent** — safe to re-run; it skips what's already done and resume
 - **Run once, idempotent.** Re-running skips completed steps (uv present, `.specify/` present, agents present) and resumes. **Never re-init Spec Kit over an existing `.specify/`** (don't pass `--force` to a project that already has one).
 - **Reload after a fresh Spec Kit init** — the `speckit-*` skills don't register until a reload; skl-init checkpoints there rather than failing to invoke `speckit-constitution`.
 - **The constitution MUST declare the code organization.** That is the contract `/skl-refactor` Phase 0 depends on — don't finish Phase 3 until the constitution states the topology + dependency direction concretely.
+- **The constitution MUST include a Loop Engineering principle** — the [loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology (phased L1→L2→L3 autonomy, human safety gates + denylists, cost budgeting with a stop rule, readiness scoring, maker/checker + durable state). Every loop's QA compliance gate enforces it against agentic / loop / automation changes; don't finish Phase 3 without it.
 - **The user picks the organization.** skl-init *recommends* (web-search-backed, with citations) but the decision is the user's (`AskUserQuestion`).
 - **Non-destructive.** Spec Kit init merges into the project; it never removes your code. skl-init never touches git history and never pushes.
 - **Telegram** prefix `[<project>]` where `<project>` is the project root dir basename; skip silently if `~/.claude/notify-telegram.sh` is absent. Ping on the reload checkpoint, before every await-input question (stack confirm, org choice), and on completion.

@@ -2,7 +2,11 @@
 
 Portable Claude Code skills for **spec-driven, QA-gated, autonomous loops** — a one-time setup
 command plus two loops, sharing one QA-agent panel and one installer. Built on
-[Spec Kit](https://github.com/github/spec-kit).
+[Spec Kit](https://github.com/github/spec-kit) and the
+[loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology — spec-loop is an
+implementation of its five-building-blocks + memory framework (automations, worktrees, skills,
+plugins/MCP, sub-agents, durable state), with phased **L1→L2→L3** autonomy rollout, human safety
+gates, transparent cost budgeting, and readiness scoring baked into the loops and the constitution.
 
 | Skill | Input | What it does |
 |-------|-------|--------------|
@@ -32,7 +36,9 @@ Bootstraps a project for the loops. Installs the prerequisites (**Spec Kit** + t
 skills, optional Playwright), verifies the QA panel, then authors the project's **constitution**:
 it asks your **tech stack**, **web-searches** the best-fit code organization (melos, clean
 architecture, feature-first, …) and lets you **choose**, then runs `speckit-constitution` to encode
-*code quality, testing/TDD, UX consistency, performance,* and the **chosen code organization**.
+*code quality, testing/TDD, UX consistency, performance,* the **chosen code organization**, and a
+**Loop Engineering** principle (the [loop-engineering](https://github.com/cobusgreyling/loop-engineering)
+methodology — phased L1→L2→L3 autonomy, human safety gates, cost budgeting, readiness scoring).
 Idempotent — re-run anytime. (After a fresh Spec Kit init it stops once for a Claude Code reload,
 then resumes.) The constitution it writes is what `/skl-refactor` reads as its target.
 
@@ -172,6 +178,14 @@ The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-ch
 
 ## Prerequisites (on the target project)
 
+- **Loop Engineering** *(methodology — required reading + adherence, nothing to install)* — spec-loop
+  is an implementation of [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering),
+  and its principles are **required** for any autonomous / agentic / loop or scheduled-automation
+  capability a spec-loop project ships: the phased **L1 (report-only) → L2 (assisted) → L3 (unattended)**
+  rollout, explicit human safety gates + denylists, transparent cost/token budgeting with a stop rule,
+  and a measurable readiness score gating promotion to a higher autonomy level. `/skl-init` encodes
+  these as a **Loop Engineering** principle in the constitution and every loop's QA compliance gate
+  enforces it.
 - **Spec Kit** — `.specify/` + the `speckit-*` skills. The loops orchestrate these.
   `/skl-init` installs this for you; or init by hand with
   `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
@@ -236,6 +250,11 @@ By hand, it's the same pull-and-copy one-liner as **Install** above (the `--excl
 makes it safe to re-run as an update).
 
 ## Credits
+
+spec-loop's design follows the **loop-engineering** methodology by Cobus Greyling
+([cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering)) — the
+five-building-blocks + memory framework, phased L1→L2→L3 autonomy rollout, human safety gates, and
+readiness scoring, which `/skl-init` bakes into the constitution and the QA gates enforce.
 
 QA agents are vendored from [darcyegb/ClaudeCodeAgents](https://github.com/darcyegb/ClaudeCodeAgents).
 The `business-analyst` (design↔spec cross-check) and `refactoring-specialist` (audit + behavior-preserving

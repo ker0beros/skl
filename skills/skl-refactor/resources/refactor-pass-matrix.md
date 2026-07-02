@@ -37,7 +37,7 @@ Spawn all six in parallel. Shared context to prepend:
 |------|------------------|--------------|
 | Behavior / reality | `karen` | Run it. Confirm behavior is identical to before the refactor; any regression is Critical/High. |
 | Target org | `Jenny` | Verify the change actually moves the code to the `organization.md` target (not a half-move), with **no** behavior change. |
-| Compliance | `claude-md-compliance-checker` | The result must be **more** compliant with CLAUDE.md + the constitution than before — flag any new violation. |
+| Compliance | `claude-md-compliance-checker` | The result must be **more** compliant with CLAUDE.md + the constitution than before — flag any new violation. **If the refactor touches agentic / loop / automation code, verify it still honors the constitution's Loop Engineering principle** (phased L1→L2→L3 autonomy, human gates + denylists, cost budget + stop rule, readiness scoring) — a refactor must not silently drop a safety gate, budget, or readiness check. |
 | Simplicity | `code-quality-pragmatist` | Flag over-engineering / needless abstraction the refactor introduced. A refactor should simplify, not gold-plate. |
 | Completion | `task-completion-validator` | Every task in `tasks.md` actually done end-to-end (e.g. all call-sites updated, no dangling old paths). |
 | No regression | `ui-comprehensive-tester` | UI surfaces: no behavioral/visual/UX change vs before. Non-UI: runtime smoke of the touched paths. |

@@ -67,7 +67,7 @@ severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the dr
 | Gate | `subagent_type` | Specific ask |
 |------|------------------|--------------|
 | Spec compliance | `Jenny` | Independently verify the implementation matches `spec.md`. Flag missing/incorrect functionality and unmet acceptance criteria. |
-| Guidelines | `claude-md-compliance-checker` | Verify the diff follows `CLAUDE.md` + `.specify/memory/constitution.md` (clean architecture, design tokens, coverage, async-state UX, query discipline). |
+| Guidelines | `claude-md-compliance-checker` | Verify the diff follows `CLAUDE.md` + `.specify/memory/constitution.md` (clean architecture, design tokens, coverage, async-state UX, query discipline). **Where the diff introduces or changes agentic / loop / scheduled-automation behavior, also verify the constitution's Loop Engineering principle** (loop-engineering: phased L1→L2→L3 autonomy, human safety gates + denylists, cost/token budget + stop rule, readiness score before promotion) — a new autonomy level shipped without its human gate, budget, or readiness check is at least **High**. |
 | Simplicity | `code-quality-pragmatist` | Flag over-engineering, premature abstraction, dead indirection introduced by this change. |
 | Reality | `karen` | Run it — endpoints/screens/flows — and report where claimed-done behavior does not actually work. |
 | Task completion | `task-completion-validator` | Confirm each task in `specs/<feature>/tasks.md` is functional end-to-end, not just edited. |

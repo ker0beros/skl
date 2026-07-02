@@ -42,7 +42,7 @@ Spawn all six in parallel (one Agent message). Shared context to prepend:
 | Symptom gone / reality | `karen` | Run it. Reproduce the original symptom — it must be **gone**. Then smoke the surrounding flows: any **new** broken behavior (regression) is Critical/High. |
 | Root-cause match | `Jenny` | Verify the change addresses the **confirmed root cause** in the spec (not a symptom patch), and that the acceptance criterion ("repro now passes") is met. |
 | Simplicity | `code-quality-pragmatist` | Flag symptom-patching, band-aids, or over-engineering. A fix should remove the cause, not paper over it. |
-| Compliance | `claude-md-compliance-checker` | The diff follows `CLAUDE.md` + `.specify/memory/constitution.md` (incl. the TDD principle — a repro test must exist). |
+| Compliance | `claude-md-compliance-checker` | The diff follows `CLAUDE.md` + `.specify/memory/constitution.md` (incl. the TDD principle — a repro test must exist). **If the fix touches agentic / loop / automation code, confirm it preserves the constitution's Loop Engineering principle** (phased L1→L2→L3 autonomy, human gates + denylists, cost budget + stop rule, readiness scoring) — a fix must not remove a safety gate or budget to make the symptom go away. |
 | Completion | `task-completion-validator` | Every task in `tasks.md` is done end-to-end; the **reproduction test exists and passes**; no dangling TODOs. |
 | No regression (UI) | `ui-comprehensive-tester` | UI surfaces: the fixed flow works and nothing visible regressed. Non-UI: runtime smoke of the touched paths. |
 
