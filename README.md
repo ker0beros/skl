@@ -15,6 +15,8 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | **`/skl-feature`** | a **feature** (text, or a **claude.ai/design** project for UI) | Loops until a 6-agent QA panel passes for the feature (max 10 iterations) |
 | **`/skl-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
 | **`/skl-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
+| **`/skl-create-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote) |
+| **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop |
 | **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
 | **`/skl-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the skl-feature QA loop, committing each on a review branch |
 | **`/skl-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
@@ -123,6 +125,42 @@ root-cause fix → green), QA-gates it, and **proves the symptom is gone** with 
 on a `skl-fix/*` review branch; never pushes or merges to main/dev. If the symptom still reproduces it
 **re-diagnoses** rather than re-patching. Requires the **Superpowers** plugin (see Prerequisites).
 
+## `/skl-create-ticket` — file a ticket on GitHub / GitLab / Jira
+
+```
+/skl-create-ticket <rough description>          # auto-detects the provider from the git remote
+/skl-create-ticket jira: <rough description>    # or name the provider explicitly
+```
+Turns a rough description into a well-structured ticket in the repo's house style, shows the full
+draft, and files it **only after you pick Create** (a Create / Edit / Cancel gate — the whole point).
+Auto-detects the provider from the git remote — **GitHub** (`gh`), **GitLab** (`glab`, incl.
+self-hosted), or **Jira** (Atlassian MCP) — asking only when it's unsure. It never applies a `loop-*`
+label: promoting an issue to **`loop-ready`** is a human decision (that queue is what `/skl-pickup-ticket`
+drains).
+
+## `/skl-pickup-ticket` — autonomously drain the `loop-ready` queue
+
+```
+/skl-pickup-ticket                 # loop the loop-ready queue, oldest first
+/skl-pickup-ticket #42             # work just issue #42, then stop
+/skl-pickup-ticket --auto --alive  # zero-prompt, poll forever
+```
+The autonomous **ticket runner**. With no number it pulls the **oldest open issue labeled
+`loop-ready`**, classifies it (bug → `/skl-fix`, feature → `/skl-feature`), works it through that
+QA-gated loop (max 10 iterations), **opens a PR that `Closes` the issue** — pushing a `skl-pickup/*`
+branch; it **never merges** to main/dev — then picks up the next-oldest. When the queue is empty it
+**waits 30 min via `ScheduleWakeup` and re-polls**; after **3 empty polls it exits** (re-run to resume),
+unless **`--alive`**, which polls indefinitely. **`--auto`** runs zero-prompt (no spec-clarification
+questions). A ticket that can't converge in 10 iterations is relabeled **`loop-blocked`**, commented
+with the findings, and skipped — so oldest-first never re-picks it. An explicit **`#N`** works that one
+ticket (bypassing the label gate), opens its PR, and stops.
+
+> **The `loop-ready` queue is the human gate.** `/skl-pickup-ticket` only touches issues a human has
+> labeled `loop-ready` — it never applies that label itself. Curate the queue (label issues
+> `loop-ready`, optionally filed via `/skl-create-ticket`), then let the loop drain it into reviewable
+> PRs; you review + merge. `/skl-resume` can continue a pickup loop after a usage-limit reset. This is
+> the loop-engineering human-gate + PR-not-merge posture in practice.
+
 ## `/skl-gate` — how strict the QA gates are
 
 ```
@@ -162,6 +200,8 @@ skills/skl-resume/   # SKILL.md — auto-continue a loop after a usage-limit res
 skills/skl-feature/  # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs [web-only], mobile-render + no-overflow-testing [mobile], templates, config example)
 skills/skl-refactor/ # SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
 skills/skl-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + remediation templates)
+skills/skl-create-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
+skills/skl-pickup-ticket/  # SKILL.md + resources/ (pickup-loop + state template) — autonomous loop-ready → PR runner
 skills/skl-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans
 skills/skl-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses skl-feature's gate)
 skills/skl-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
