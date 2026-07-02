@@ -30,7 +30,7 @@ Empty input (no number) → **loop mode** over `loop-ready` issues, oldest first
 
 ## What this command does
 
-`/skl-pickup-ticket` is spec-loop's **autonomous ticket runner** — the consumer of the human-gated
+`/skl-pickup-ticket` is skl's **autonomous ticket runner** — the consumer of the human-gated
 `loop-ready` queue that the other skills refer to. It fetches the **oldest open issue labeled
 `loop-ready`**, classifies it as a **bug** or a **feature**, works it end-to-end through the existing
 QA-gated build loop (`/skl-fix` for bugs, `/skl-feature` for features, max 10 iterations each), **opens a

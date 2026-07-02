@@ -1,6 +1,6 @@
 ---
 name: skl-help
-description: "List every spec-loop command with a one-line explanation and the recommended workflow. Reads the installed skl-* skills so the list always reflects what's actually available. Pass a command name (e.g. skl-run) for its full details."
+description: "List every skl command with a one-line explanation and the recommended workflow. Reads the installed skl-* skills so the list always reflects what's actually available. Pass a command name (e.g. skl-run) for its full details."
 argument-hint: "(optional) a command name for full detail, e.g. skl-run — empty lists everything"
 metadata:
   author: "khairul"
@@ -23,7 +23,7 @@ If the input names a specific command (with or without the leading `/`, e.g. `sk
 
 ## What this command does
 
-`/skl-help` prints the spec-loop command reference. It is **read-only** — it discovers the installed
+`/skl-help` prints the skl command reference. It is **read-only** — it discovers the installed
 skills and renders them; it changes nothing and needs no approval or Telegram ping.
 
 To stay accurate as the toolkit evolves, it reads the **live frontmatter** of the installed skills

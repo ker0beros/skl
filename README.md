@@ -1,9 +1,9 @@
-# spec-loop
+# skl
 
 Portable Claude Code skills for **spec-driven, QA-gated, autonomous loops** — a one-time setup
 command plus two loops, sharing one QA-agent panel and one installer. Built on
 [Spec Kit](https://github.com/github/spec-kit) and the
-[loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology — spec-loop is an
+[loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology — skl is an
 implementation of its five-building-blocks + memory framework (automations, worktrees, skills,
 plugins/MCP, sub-agents, durable state), with phased **L1→L2→L3** autonomy rollout, human safety
 gates, transparent cost budgeting, and readiness scoring baked into the loops and the constitution.
@@ -20,9 +20,9 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
 | **`/skl-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the skl-feature QA loop, committing each on a review branch |
 | **`/skl-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
-| **`/skl-update`** | (none) | Pull the latest spec-loop from GitHub and refresh this project's skills + agents (keeps your config) |
+| **`/skl-update`** | (none) | Pull the latest skl from GitHub and refresh this project's skills + agents (keeps your config) |
 | **`/skl-resume`** | (optional) reset time | Auto-continue a loop after Claude's usage limit resets — waits for the status-bar timer + 3 min, then resumes |
-| **`/skl-help`** | (optional) command name | Lists every spec-loop command + a one-line explanation and the workflow (reads the installed skills, so it's always current) |
+| **`/skl-help`** | (optional) command name | Lists every skl command + a one-line explanation and the workflow (reads the installed skills, so it's always current) |
 
 The build/refactor/fix loops chain the individual `speckit-*` skills (`specify → … → implement`), then
 gate the result with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings
@@ -218,10 +218,10 @@ The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-ch
 
 ## Prerequisites (on the target project)
 
-- **Loop Engineering** *(methodology — required reading + adherence, nothing to install)* — spec-loop
+- **Loop Engineering** *(methodology — required reading + adherence, nothing to install)* — skl
   is an implementation of [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering),
   and its principles are **required** for any autonomous / agentic / loop or scheduled-automation
-  capability a spec-loop project ships: the phased **L1 (report-only) → L2 (assisted) → L3 (unattended)**
+  capability a skl project ships: the phased **L1 (report-only) → L2 (assisted) → L3 (unattended)**
   rollout, explicit human safety gates + denylists, transparent cost/token budgeting with a stop rule,
   and a measurable readiness score gating promotion to a higher autonomy level. `/skl-init` encodes
   these as a **Loop Engineering** principle in the constitution and every loop's QA compliance gate
@@ -247,14 +247,14 @@ Installation **pulls the repo from GitHub** and copies the skills + agents into 
 
 ```bash
 # clone-to-cache (or refresh it), then copy skills + agents into this project's .claude/
-{ [ -d ~/.spec-loop ] && git -C ~/.spec-loop fetch -q origin && git -C ~/.spec-loop reset -q --hard origin/main \
-   || gh repo clone ker0beros/spec-loop ~/.spec-loop; } \
+{ [ -d ~/.skl ] && git -C ~/.skl fetch -q origin && git -C ~/.skl reset -q --hard origin/main \
+   || gh repo clone ker0beros/skl ~/.skl; } \
   && mkdir -p .claude/skills .claude/agents \
-  && rsync -a --exclude=project.config.md ~/.spec-loop/skills/ .claude/skills/ \
-  && rsync -a ~/.spec-loop/agents/ .claude/agents/
+  && rsync -a --exclude=project.config.md ~/.skl/skills/ .claude/skills/ \
+  && rsync -a ~/.skl/agents/ .claude/agents/
 ```
 
-(Prefer agents shared across projects? `rsync -a ~/.spec-loop/agents/ ~/.claude/agents/` instead.) The
+(Prefer agents shared across projects? `rsync -a ~/.skl/agents/ ~/.claude/agents/` instead.) The
 `--exclude=project.config.md` keeps any per-project config you already have; `/skl-init` generates it
 on first run.
 
@@ -282,7 +282,7 @@ overwrite an existing `project.config.md`.
 
 ## Updating
 
-From inside a project that already has spec-loop installed, just run **`/skl-update`** — it pulls
+From inside a project that already has skl installed, just run **`/skl-update`** — it pulls
 `origin/main`, shows what's new, and syncs the skill + agent files (**keeping** each
 `project.config.md`). Reload Claude Code afterward.
 
@@ -291,7 +291,7 @@ makes it safe to re-run as an update).
 
 ## Credits
 
-spec-loop's design follows the **loop-engineering** methodology by Cobus Greyling
+skl's design follows the **loop-engineering** methodology by Cobus Greyling
 ([cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering)) — the
 five-building-blocks + memory framework, phased L1→L2→L3 autonomy rollout, human safety gates, and
 readiness scoring, which `/skl-init` bakes into the constitution and the QA gates enforce.

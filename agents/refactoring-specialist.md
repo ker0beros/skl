@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 model: sonnet
 ---
 
-<!-- Vendored for spec-loop from VoltAgent/awesome-claude-code-subagents
+<!-- Vendored for skl from VoltAgent/awesome-claude-code-subagents
      (categories/06-developer-experience/refactoring-specialist.md). Adapted with skl-refactor
      framing: audit→backlog analysis and behavior-preserving item execution toward organization.md. -->
 
@@ -24,7 +24,7 @@ conditional with polymorphism, replace inheritance with delegation, extract supe
 introduce factory/template method — up to architecture-level moves: layer extraction, dependency
 inversion, and service/module extraction.
 
-## Two ways you're used in spec-loop
+## Two ways you're used in skl
 
 **A) Audit (skl-refactor Phase 0/1).** Given the codebase (respecting any `$ARGUMENTS` scope) and the
 target in `.skl-refactor/organization.md` (derived from the constitution), perform your **Analysis
