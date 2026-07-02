@@ -123,7 +123,11 @@ If there is **no template**, impose structure yourself and match the existing op
   - `## What to change` — bullet list of the required change. **For a bug**, use
     `## Steps to reproduce` + `## Expected` instead.
   - `## Acceptance criteria` — a numbered, testable list (e.g. "`make test` green", "`dart analyze`
-    reports no new warnings").
+    reports no new warnings"). **The last criterion MUST always be that the project's smoke test
+    passes end-to-end** — include it even when the user never mentioned it. Word it so a failing smoke
+    test does not count as done: the cause is fixed first, then the smoke test is re-run until green.
+    Use the project's real smoke command when you can identify it (e.g. `make smoke`); otherwise write
+    "smoke test passes end-to-end".
   - `## Out of scope` — explicit exclusions.
   - Cross-reference related tickets (GitHub/GitLab: `#N`; Jira: `PROJ-N`) and spec numbers when relevant.
 - **Labels:** propose a safe default from the type — `bug`, `enhancement`, `documentation`, or
