@@ -64,9 +64,17 @@ Oldest-first within a tier. No agent spawn; the rubric lives in the SKILL.md.
 
 ## Output format
 
-A compact dashboard of **only the non-empty tiers** — one line per finding: what was found, the
-count/id, and the exact command (or human action). Then the **Next step** line and the offer.
-Skipped collectors are listed at the bottom with their reason.
+Two sections, state first, then advice:
+
+1. **Current state** — a full snapshot of what the sweep found, per collector, **including
+   healthy/zero lines** so the whole picture is visible at a glance: issue counts per `loop-*`
+   label (+ unlabeled), open `skl-pickup/*` PRs and unmerged review branches, plan counts by
+   `Loop-Status`, installed vs upstream version, working-tree clean/dirty, `.skl-pickup/state.md`
+   status. Skipped collectors appear here with their reason.
+2. **Recommended steps** — the triaged findings, tier-ordered (only non-empty tiers), one line
+   per finding: what was found, the count/id, and the exact command (or human action).
+
+Then the **Next step** line and the offer.
 
 ## Rules & invariants
 
