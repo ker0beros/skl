@@ -48,3 +48,5 @@ State: running        # running | waiting(next poll <ISO-8601>) | exited(<reason
   `loop-done` / `loop-deferred` / `loop-needs-info` (or an interactive readiness-gate Skip).
 - **Results** doubles as the run report shown on exit.
 - On a clean exit or a fresh manual start, reset `empty_polls: 0` and `State: running`.
+- **`exited(drained)`** is the `--drain` driver-mode exit: first empty poll, no wakeup, no ping —
+  the calling `/skl-auto` reads it as "queue empty, continue the cycle".
