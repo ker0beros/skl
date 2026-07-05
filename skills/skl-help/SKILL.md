@@ -48,14 +48,15 @@ rather than a hard-coded list.
    - **Maintain** — `skl-refactor` (toward the constitution) · `skl-fix` (root-cause bug fixes)
    - **Controls** — `skl-gate` (QA strictness)
    - **Ops** — `skl-update` (pull latest) · `skl-resume` (continue after a usage-limit reset)
-   - **Help** — `skl-help`
+   - **Help** — `skl-help` · `skl-next-step` (what should I do now?)
 
 4. **Append the workflow + notes** (after the list):
 
    > **Typical flow:** `skl-init` once → then `skl-feature` for a single feature, **or** `skl-plan`
    > ×N to queue specs then `skl-run` to batch them. Use `skl-refactor` / `skl-fix` on existing
    > code, `skl-gate` to set strictness, `skl-resume` if a usage limit interrupts a long run, and
-   > `skl-update` to pull the latest.
+   > `skl-update` to pull the latest. Not sure what's next? `skl-next-step` triages your
+   > issues / PRs / plans into one recommended step.
    >
    > **Notes:** per-project config (surface, gate commands, `gate_strictness`) lives in each skill's
    > `resources/project.config.md`. `skl-feature` / `skl-plan` take an **optional** claude.ai/design
