@@ -17,6 +17,7 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | **`/skl-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
 | **`/skl-create-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote) |
 | **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
+| **`/skl-next-step`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / plans / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
 | **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
 | **`/skl-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the skl-feature QA loop, committing each on a review branch |
 | **`/skl-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
@@ -179,6 +180,21 @@ new `loop-ready` ones, so a crash never strands a ticket. (Missing labels are au
 > PRs; you review + merge (`loop-done` = PR up, awaiting you). `/skl-resume` can continue a pickup loop
 > after a usage-limit reset. This is the loop-engineering human-gate + PR-not-merge posture in practice.
 
+## `/skl-next-step` — what should I do now?
+
+```
+/skl-next-step
+```
+The read-only **triage advisor**. Sweeps the project's skl state — issue `loop-*` labels, open
+`skl-pickup/*` PRs + unmerged review branches (`skl-run/*` / `skl-fix/*` / `skl-refactor/*`),
+`Loop-Status` plans, and setup/housekeeping drift — prints a **current-state snapshot** first,
+then ranks the findings on a fixed **unblock-first ladder**: setup blockers (`/skl-init`) →
+unblock the pipeline (stranded tickets, PRs awaiting merge, `loop-needs-info` answers, deferred
+rescues) → start new work (ready plans → `/skl-run`, `loop-ready` queue → `/skl-pickup-ticket`) →
+housekeeping (`/skl-update`, dirty tree). It names the single next step and **offers (human-gated)
+to run it** — the triage itself changes nothing: no labels, comments, branches, or writes.
+Collectors it can't run (no remote, CLI unauthenticated) are skipped with a reason.
+
 ## `/skl-gate` — how strict the QA gates are
 
 ```
@@ -220,6 +236,7 @@ skills/skl-refactor/ # SKILL.md + resources/ (organization + backlog + pass-matr
 skills/skl-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + remediation templates)
 skills/skl-create-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
 skills/skl-pickup-ticket/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check) — autonomous loop-ready → PR runner
+skills/skl-next-step/  # SKILL.md — read-only triage advisor: current-state snapshot → unblock-first next step + offer
 skills/skl-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans
 skills/skl-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses skl-feature's gate)
 skills/skl-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
