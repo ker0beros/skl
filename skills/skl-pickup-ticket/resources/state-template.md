@@ -45,6 +45,6 @@ State: running        # running | waiting(next poll <ISO-8601>) | exited(<reason
 - **In-flight** records the ticket currently labeled `loop-in-progress`. On re-entry (ScheduleWakeup or a
   cold restart) the **resume** poll re-picks any `loop-in-progress` ticket, so the label is the durable
   source of truth and this field is the human-readable mirror; clear it when the ticket resolves to
-  `loop-done` / `loop-deferred`.
+  `loop-done` / `loop-deferred` / `loop-needs-info` (or an interactive readiness-gate Skip).
 - **Results** doubles as the run report shown on exit.
 - On a clean exit or a fresh manual start, reset `empty_polls: 0` and `State: running`.

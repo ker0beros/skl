@@ -102,7 +102,7 @@ that. `loop-in-progress` is also how the loop **resumes** an interrupted ticket 
 
 ## Single-ticket mode (`#N` given)
 
-An explicit number **is** the human authorization, so it **bypasses the `loop-ready` label gate** — but NOT the step-2.5 readiness gate: a vague `#N` ticket burns the same 10 iterations as any other. Do the per-ticket sequence below (steps 2→5) for issue `#N`, then **STOP** — no polling, no next ticket. (`#N` tickets may carry no lifecycle label; step 2.5's label transitions are add-only there.)
+An explicit number **is** the human authorization, so it **bypasses the `loop-ready` label gate** — but NOT the step-2.5 readiness gate: a vague `#N` ticket would burn the same 10 iterations as any other. Do the per-ticket sequence below (steps 2→5) for issue `#N`, then **STOP** — no polling, no next ticket. (`#N` tickets may carry no lifecycle label; step 2.5's label transitions are add-only there.)
 
 ---
 
@@ -151,13 +151,13 @@ request-info comment, and a final `READINESS:` line. **You (the driver) route:**
 - **`not-ready` + `--auto`** → flip `pickup_inprogress_label` → **`pickup_needsinfo_label`**, post
   the request-info comment (what's missing + "remove `loop-needs-info`, re-add `loop-ready` when
   updated" — commands in `resources/pickup-loop.md`), add the id to the skip-list, record
-  `needs-info` in the state file, fire `bash ~/.claude/notify-telegram.sh "[<project>]
+  `needs-info` and clear the in-flight ticket in the state file, fire `bash ~/.claude/notify-telegram.sh "[<project>]
   /skl-pickup-ticket ⏸ #<n> needs info — labeled loop-needs-info"`; **loop mode → step 1**,
   **`#N` mode → STOP**.
 - **`not-ready`, interactive** → fire the await ping, then `AskUserQuestion` listing the missing
   items: **Answer now** (post the answers as an issue comment for the record, seed them into the
   step-3 sub-skill invocation, → step 3) / **Route to needs-info** (the `--auto` path above) /
-  **Skip this ticket** (flip back to `pickup_label` so a future run can claim it, skip-list, →
+  **Skip this ticket** (flip back to `pickup_label` so a future run can claim it, skip-list + clear in-flight, →
   step 1 / STOP).
 
 ### 3. Work the ticket on its own branch
@@ -209,10 +209,11 @@ Create `skl-pickup/<n>-<slug>` off `pr_base_branch` and stay on it. Then, via th
   **never applies `loop-ready` itself**. It *does* own every downstream transition — `loop-in-progress`
   (claim / resume), `loop-done` (PR opened), `loop-deferred` (couldn't converge), `loop-needs-info`
   (readiness gate: too vague to start). Re-entry from `loop-needs-info` is human: answer the comment,
-  remove the label, re-add `loop-ready`. In loop mode it only
+  remove the label, re-add `loop-ready`. (The interactive **Skip** option restoring `pickup_label` is the
+  human's own re-queue decision, relayed by the loop — not the loop promoting a ticket.) In loop mode it only
   starts new work on `loop-ready` tickets and resumes `loop-in-progress` ones. An explicit `#N` is a human
   authorization and bypasses the gate.
-- **One ticket at a time, oldest first.** Fully resolve a ticket (PR opened or deferred) before the next.
+- **One ticket at a time, oldest first.** Fully resolve a ticket (PR opened, deferred, or needs-info) before the next.
 - **PR, never merge.** Push the per-ticket branch and open a PR/MR that `Closes #<n>`; a human reviews &
   merges. Never push to or merge into main/dev — only the `skl-pickup/*` branch is pushed.
 - **Reuses the QA machinery.** Bug path = `/skl-fix`, feature path = `/skl-feature`; the gate + cap-10 +
