@@ -304,6 +304,9 @@ From inside a project that already has skl installed, just run **`/skl-update`**
 By hand, it's the same pull-and-copy one-liner as **Install** above (the `--exclude=project.config.md`
 makes it safe to re-run as an update).
 
+Every release bumps the root `VERSION` and adds a `CHANGELOG.md` entry (rule in `CLAUDE.md`),
+so `/skl-update` can show you installed → new version and exactly what changed.
+
 ## Credits
 
 skl's design follows the **loop-engineering** methodology by Cobus Greyling
