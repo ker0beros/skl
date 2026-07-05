@@ -16,7 +16,7 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | **`/skl-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
 | **`/skl-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
 | **`/skl-create-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote) |
-| **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred`) |
+| **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
 | **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
 | **`/skl-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the skl-feature QA loop, committing each on a review branch |
 | **`/skl-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
@@ -148,8 +148,10 @@ drains).
 /skl-pickup-ticket --auto --alive  # zero-prompt, poll forever
 ```
 The autonomous **ticket runner**. With no number it pulls the **oldest open issue labeled
-`loop-ready`**, classifies it (bug → `/skl-fix`, feature → `/skl-feature`), works it through that
-QA-gated loop (max 10 iterations), **opens a PR that `Closes` the issue** — pushing a `skl-pickup/*`
+`loop-ready`**, classifies it (bug → `/skl-fix`, feature → `/skl-feature`), **readiness-gates it** (an
+`skl-business-analyst` check — a ticket too vague to work autonomously is labeled
+`loop-needs-info` with a comment listing what's missing, instead of burning iterations), works it
+through that QA-gated loop (max 10 iterations), **opens a PR that `Closes` the issue** — pushing a `skl-pickup/*`
 branch; it **never merges** to main/dev — then picks up the next-oldest. When the queue is empty it
 **waits 30 min via `ScheduleWakeup` and re-polls**; after **3 empty polls it exits** (re-run to resume),
 unless **`--alive`**, which polls indefinitely. **`--auto`** runs zero-prompt (no spec-clarification
@@ -161,8 +163,9 @@ As it works, the loop drives a **label lifecycle** on the issue so you can see e
 glance:
 
 ```
-loop-ready ──claim──▶ loop-in-progress ──PR opened──▶ loop-done   (stays open until you merge the PR)
- (you set)            (loop working it)  └──cap hit──▶ loop-deferred (findings commented, skipped)
+loop-ready ──claim──▶ loop-in-progress ──PR opened──▶ loop-done      (stays open until you merge the PR)
+ (you set)            (loop working it)  ├──cap hit───▶ loop-deferred  (findings commented, skipped)
+                                         └──not ready─▶ loop-needs-info (missing info commented; you re-label loop-ready)
 ```
 
 A human only ever sets **`loop-ready`**; the loop owns every transition after that. On start-up it
@@ -171,7 +174,7 @@ new `loop-ready` ones, so a crash never strands a ticket. (Missing labels are au
 
 > **The `loop-ready` queue is the human gate.** `/skl-pickup-ticket` only *starts* work on issues a human
 > has labeled `loop-ready` — it never applies that label itself (though it does drive the downstream
-> `loop-in-progress` / `loop-done` / `loop-deferred` transitions). Curate the queue (label issues
+> `loop-in-progress` / `loop-done` / `loop-deferred` / `loop-needs-info` transitions). Curate the queue (label issues
 > `loop-ready`, optionally filed via `/skl-create-ticket`), then let the loop drain it into reviewable
 > PRs; you review + merge (`loop-done` = PR up, awaiting you). `/skl-resume` can continue a pickup loop
 > after a usage-limit reset. This is the loop-engineering human-gate + PR-not-merge posture in practice.
@@ -206,7 +209,7 @@ resets), so the same loop resumes in the same context — the loops pick up from
 ## What's in here
 
 ```
-agents/               # 11 subagents — 8 QA gate agents + skl-debugger (failure-time) + skl-business-analyst (skl-feature/plan) + skl-refactoring-specialist (skl-refactor)
+agents/               # 11 subagents — 8 QA gate agents + skl-debugger (failure-time) + skl-business-analyst (skl-feature/plan/pickup) + skl-refactoring-specialist (skl-refactor)
 skills/skl-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
 skills/skl-design/   # SKILL.md + resources/ (design-system checklist + Claude Design prompt template)
 skills/skl-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
@@ -231,7 +234,7 @@ The 8 gate agents — `skl-spec-auditor` (spec + task completion), `skl-guidelin
 `skl-test-integrity-auditor` (test/gate tampering), `skl-ui-tester` (UI + design/animation parity) —
 plus `skl-debugger` (the failure-time fixer), `skl-business-analyst` (used in `/skl-feature` +
 `/skl-plan` Phase A of **both modes** to cross-check the spec against its source — the rendered
-design when there is one, the intent + clarify answers text-only), and `skl-refactoring-specialist`
+design when there is one, the intent + clarify answers text-only — plus the `/skl-pickup-ticket` readiness gate), and `skl-refactoring-specialist`
 (used in `/skl-refactor` to audit smells and perform behavior-preserving refactors).
 
 ## Prerequisites (on the target project)
