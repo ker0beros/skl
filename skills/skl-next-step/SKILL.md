@@ -63,10 +63,12 @@ findings, not an error.
 3. **PRs + review branches** —
 
    ```bash
-   gh pr list --state open --limit 50 --json number,title,headRefName,url      # keep headRefName skl-pickup/*
+   gh pr list --state open --limit 50 --json number,title,headRefName,url,createdAt   # keep headRefName skl-pickup/*
    # GitLab: glab api "projects/:id/merge_requests?state=opened&per_page=50"   # keep source_branch skl-pickup/*
+   # oldest first via createdAt; a PR's issue number is the <n> in its skl-pickup/<n>-<slug> head branch
    BASE=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||'); BASE=${BASE:-main}
-   git branch --list 'skl-run/*' 'skl-fix/*' 'skl-refactor/*' 'skl-pickup/*' --no-merged "$BASE"
+   REF="origin/$BASE"; git rev-parse -q --verify "$REF" >/dev/null 2>&1 || REF="$BASE"   # remote base if present (catches remotely-merged PRs)
+   git branch --list 'skl-run/*' 'skl-fix/*' 'skl-refactor/*' 'skl-pickup/*' --no-merged "$REF"
    ```
 4. **Plans + housekeeping** —
 
@@ -163,7 +165,9 @@ oldest in-flight work before anything new starts.
 
 1. Determine the **top pick** — the first recommended step. If it is **human-only** (review /
    merge / answer / curate), it stays the named *Next step*, and the **run offer** falls to the
-   highest *runnable* recommendation (one that maps to a skl skill).
+   highest *runnable* recommendation (one that maps to a skl skill). **No runnable
+   recommendation at all** (every finding is human-only) → skip the offer entirely — no ping, no
+   question: the report itself is the deliverable; end the turn.
 2. Fire the await-input ping:
    `bash ~/.claude/notify-telegram.sh "[<project>] /skl-next-step → <top pick, one line> — awaiting your choice"`
    (skip silently if the notifier is absent).
@@ -174,8 +178,6 @@ oldest in-flight work before anything new starts.
    - **Pick another** — a second `AskUserQuestion` listing up to 4 runnable recommendations,
      top-down; invoke the choice via the Skill tool.
    - **Just the report** — end the turn; nothing is invoked.
-4. **No runnable recommendation at all** (every finding is human-only) → skip the offer: the
-   report itself is the deliverable; end the turn.
 
 ---
 
