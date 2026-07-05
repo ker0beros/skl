@@ -125,24 +125,24 @@ action). Shape (values are examples):
 ```text
 # skl — current state                    (github · base: main)
 
-# Issues (loop-* lifecycle)
+## Issues (loop-* lifecycle)
 - loop-ready: 2 (oldest #14, 3d)         - loop-needs-info: 1 — #17 (awaiting your answers)
 - loop-in-progress: 1 — #12 ⚠ stranded   - loop-deferred: 0
 - loop-done: 1 — #9 (PR #31 open)        - unlabeled open: 4
 
-# PRs & review branches
+## PRs & review branches
 - open skl-pickup PRs: 1 — #31 (closes #9)
 - unmerged review branches: skl-run/0705-1130
 
-# Plans (specs/)
+## Plans (specs/)
 - ready: 2 (004-export-csv, 006-dark-mode) · running: 0 · deferred: 1 (005-retry-queue)
 
-# Setup & housekeeping
+## Setup & housekeeping
 - config: OK · Spec Kit: OK · version: 1.3.0 installed → 1.4.0 upstream (update available)
 - working tree: clean · pickup state: exited (2 results logged)
 - skipped: (none)
 
-# Recommended steps (unblock-first)
+## Recommended steps (unblock-first)
 1. [T1] ⚠ #12 is stranded on loop-in-progress → /skl-pickup-ticket (resumes it first)
 2. [T1] Review & merge PR #31 (closes #9, loop-done) — human: <url>
 3. [T1] Review & merge branch skl-run/0705-1130 — human
