@@ -15,10 +15,10 @@ mobile_gates:
   - make analyze
   - make test
 web_gates: []                  # e.g.  - make web-analyze   /   - make web-build
-web_dev_server:                # e.g.  make web-dev   (ui-comprehensive-tester uses this for web parity)
+web_dev_server:                # e.g.  make web-dev   (skl-ui-tester uses this for web parity)
 web_cwv:                       # e.g.  make web-cwv   (run only for full-page web designs)
 
-## Mobile live render — how ui-comprehensive-tester captures REAL pixels for a design-driven mobile round.
+## Mobile live render — how skl-ui-tester captures REAL pixels for a design-driven mobile round.
 # Design-driven MOBILE has NO headless desktop render (Flutter apps with no web/desktop target), so a
 # booted simulator/emulator screenshot is the ONLY pixel source for the parity gate. The loop reads
 # `mobile_render` to render + capture each design-driven screen into specs/<feature>/verification/.

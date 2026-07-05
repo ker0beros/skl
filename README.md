@@ -12,7 +12,7 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 |-------|-------|--------------|
 | **`/skl-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
 | **`/skl-design`** | a **feature flow** to design | Brainstorms (Superpowers) a Claude Design prompt — design system + platforms (mobile/tablet/web) + screens/states — then auto-writes the plan |
-| **`/skl-feature`** | a **feature** (text, or a **claude.ai/design** project for UI) | Loops until a 6-agent QA panel passes for the feature (max 10 iterations) |
+| **`/skl-feature`** | a **feature** (text, or a **claude.ai/design** project for UI) | Loops until an 8-agent QA panel passes for the feature (max 10 iterations) |
 | **`/skl-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
 | **`/skl-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
 | **`/skl-create-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote) |
@@ -26,7 +26,7 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 
 The build/refactor/fix loops chain the individual `speckit-*` skills (`specify → … → implement`), then
 gate the result with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings
-(and, per `/skl-gate`, also 0 Low and/or 0 Info). On failure, `ultrathink-debugger` turns the findings into the
+(and, per `/skl-gate`, also 0 Low and/or 0 Info). On failure, `skl-debugger` turns the findings into the
 next iteration's plan.
 
 ## `/skl-init` — first-time setup (run this once)
@@ -65,7 +65,7 @@ Claude Design account. Pipeline: `/skl-design` → paste prompt into claude.ai/d
 ```
 The design reference is **optional** — not every feature has a UI. Generates `spec.md` (speckit
 `specify` + `clarify`), **stops for your approval**, then runs
-`plan → tasks → analyze → checklist → implement → QA-gates`, looping until the 6-agent panel passes.
+`plan → tasks → analyze → checklist → implement → QA-gates`, looping until the 8-agent panel passes.
 With a design (design-driven mode) it also pulls it (read-only, via `DesignSync`), renders it as the
 visual spec, and verifies design **and animation** parity (keyframe + behavior checklist). Without one
 (text-only mode) it works straight from your description and skips all the visual/animation steps.
@@ -103,7 +103,7 @@ It reuses skl-feature's QA pass-matrix + renderer (one source of truth), so the 
 Reads the **target organization from the constitution** (if the constitution is silent on code
 organization, it web-searches best practices, gets your sign-off, and seeds the constitution — the
 loop's one approval gate; **`--auto`** removes even that, auto-picking the best-practice organization),
-uses a `refactoring-specialist` agent to audit the code into a prioritized **backlog**, then **autonomously**
+uses a `skl-refactoring-specialist` agent to audit the code into a prioritized **backlog**, then **autonomously**
 refactors each item through the speckit workflow, QA-gates it (behavior-preservation centric),
 commits it on a `skl-refactor/*` review branch, and **re-audits** until nothing Critical/High
 remains. Never pushes or merges to main/dev — you review the integration branch.
@@ -204,7 +204,7 @@ resets), so the same loop resumes in the same context — the loops pick up from
 ## What's in here
 
 ```
-agents/               # 9 subagents — 7 QA gate agents + business-analyst (skl-feature/plan) + refactoring-specialist (skl-refactor)
+agents/               # 11 subagents — 8 QA gate agents + skl-debugger (failure-time) + skl-business-analyst (skl-feature/plan) + skl-refactoring-specialist (skl-refactor)
 skills/skl-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
 skills/skl-design/   # SKILL.md + resources/ (design-system checklist + Claude Design prompt template)
 skills/skl-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
@@ -223,11 +223,13 @@ skills/skl-help/     # SKILL.md — lists all commands + the workflow (reads ins
 Install = pull this repo and copy `skills/` + `agents/` into your project's `.claude/` (there is no
 install script). `/skl-init` then generates each skill's `project.config.md`.
 
-The 6 gate agents — `Jenny` (spec/target compliance), `claude-md-compliance-checker`,
-`code-quality-pragmatist`, `karen` (reality check), `task-completion-validator`,
-`ui-comprehensive-tester` — plus `ultrathink-debugger` (the failure-time fixer), `business-analyst`
-(used in `/skl-feature` + `/skl-plan` Phase A to cross-check the design against the spec), and
-`refactoring-specialist` (used in `/skl-refactor` to audit smells and perform behavior-preserving refactors).
+The 8 gate agents — `skl-spec-auditor` (spec + task completion), `skl-guideline-auditor`
+(CLAUDE.md + constitution), `skl-pragmatist` (simplicity), `skl-reality-checker` (runs it),
+`skl-code-reviewer` (adversarial bug hunt), `skl-security-auditor` (security pass),
+`skl-test-integrity-auditor` (test/gate tampering), `skl-ui-tester` (UI + design/animation parity) —
+plus `skl-debugger` (the failure-time fixer), `skl-business-analyst` (used in `/skl-feature` +
+`/skl-plan` Phase A to cross-check the design against the spec), and `skl-refactoring-specialist`
+(used in `/skl-refactor` to audit smells and perform behavior-preserving refactors).
 
 ## Prerequisites (on the target project)
 
@@ -309,7 +311,11 @@ skl's design follows the **loop-engineering** methodology by Cobus Greyling
 five-building-blocks + memory framework, phased L1→L2→L3 autonomy rollout, human safety gates, and
 readiness scoring, which `/skl-init` bakes into the constitution and the QA gates enforce.
 
-QA agents are vendored from [darcyegb/ClaudeCodeAgents](https://github.com/darcyegb/ClaudeCodeAgents).
-The `business-analyst` (design↔spec cross-check) and `refactoring-specialist` (audit + behavior-preserving
-refactors) agents are vendored and adapted from
-[VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents).
+The agents are skl's own. The panel's original design drew inspiration from
+[darcyegb/ClaudeCodeAgents](https://github.com/darcyegb/ClaudeCodeAgents) and
+[VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents);
+the current 8-gate panel — including the security, correctness, and test-integrity gates — follows
+the agentic-review practice in Addy Osmani's
+[Loop Engineering](https://addyosmani.com/blog/loop-engineering/) and
+[Agentic Code Review](https://addyosmani.com/blog/agentic-code-review/) (maker/checker separation,
+adversarial diff review, test-change scrutiny, driver-owned verdicts).

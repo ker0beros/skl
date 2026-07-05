@@ -3,7 +3,7 @@
 The mobile counterpart to `render-keyframes.mjs` (which is **web-only**). Design-driven **mobile** has
 **no headless desktop render** — a Flutter app with no web/desktop target can't be rendered to PNGs by
 a script — so the **only** pixel source for the parity gate is a screenshot of the app running on a
-**booted simulator/emulator**. `ui-comprehensive-tester` runs this flow; the round **cannot pass**
+**booted simulator/emulator**. `skl-ui-tester` runs this flow; the round **cannot pass**
 without the resulting `specs/<feature>/verification/` captures (the render gate in `pass-matrix.md`).
 
 Default render platform: **iOS** (an iPad-class tablet). Android is an **opt-in secondary** — render it

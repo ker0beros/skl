@@ -1,6 +1,6 @@
 # Remediation brief — <feature> — iteration <N>
 
-> Written by `ultrathink-debugger` after a failing QA round. The next `speckit-plan` run is
+> Written by `skl-debugger` after a failing QA round. The next `speckit-plan` run is
 > seeded with this file so plan → tasks target these fixes. Be concrete and file/spec-keyed.
 
 ## Failing gates this round
@@ -9,7 +9,7 @@ List each gate that did not pass and why (carry the agent's own severity).
 
 | Gate | Worst severity | One-line reason |
 |------|----------------|-----------------|
-| <Jenny / karen / ui-comprehensive-tester / make / …> | <Critical/High/Medium> | <what failed> |
+| <skl-spec-auditor / skl-reality-checker / skl-ui-tester / make / …> | <Critical/High/Medium> | <what failed> |
 
 ## Root causes
 
@@ -32,7 +32,7 @@ Things that already pass and must stay passing (so the next iteration doesn't tr
 
 - <e.g. existing Visual Target rows already matching; coverage floors; design-token gate>
 
-## Animation/parity specifics (if `ui-comprehensive-tester` failed)
+## Animation/parity specifics (if `skl-ui-tester` failed)
 
 | Inventory row | Expected (design) | Observed (live) | Fix |
 |---------------|-------------------|-----------------|-----|

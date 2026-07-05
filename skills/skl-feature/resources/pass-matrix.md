@@ -14,21 +14,21 @@ The threshold depends on **`gate_strictness`** in `project.config.md` (toggle it
 
 The **whole round passes** iff ALL of:
 1. The surface's automated gates exited 0 (see below).
-2. All 6 QA gate-agents pass.
+2. All 8 QA gate-agents pass.
 3. **(design mode only)** Every **Visual Target** and every **Animation Inventory** row in `spec.md`
-   is present in the live implementation and within tolerance (owned by `ui-comprehensive-tester`).
+   is present in the live implementation and within tolerance (owned by `skl-ui-tester`).
    In **text-only mode** there are no Visual Targets/Animation rows, so this clause is skipped.
 4. **(design-driven mobile only — render gate)** `specs/<feature>/verification/` contains a **live
    rendered screenshot per design-driven screen**, captured from a booted simulator/emulator via the
    `mobile_render` recipe in `project.config.md` (default iOS iPad). **If that artifact is absent,
-   `ui-comprehensive-tester` MUST report a High finding and the round CANNOT pass** — the gate may
+   `skl-ui-tester` MUST report a High finding and the round CANNOT pass** — the gate may
    **not** degrade to a functional smoke and report parity as "present in the spec text." A real
    device/simulator render is the **only** accepted pixel source for a mobile design (Flutter apps with
    no web/desktop target have no headless render), and it is what catches defects that throw no
    exception — content clipped at the screen edge and doubled/missing chrome.
 
 If the round does not pass and `iteration < 10`, the aggregated findings go to
-`ultrathink-debugger`, which writes the remediation brief that seeds the next `speckit-plan`.
+`skl-debugger`, which writes the remediation brief that seeds the next `speckit-plan`.
 
 ## Automated gates (run before the QA panel)
 
@@ -38,7 +38,7 @@ The exact commands are project-specific — read them from `project.config.md` (
 - **mobile** → the `mobile_gates` commands (e.g. `make analyze`, `make test`).
 - **web** → the `web_gates` commands (e.g. `make web-analyze`, `make web-build`), plus `web_cwv` if the design is a full page.
 
-A red automated gate fails the round immediately — feed its stdout/stderr to `ultrathink-debugger`.
+A red automated gate fails the round immediately — feed its stdout/stderr to `skl-debugger`.
 
 For **mobile** surfaces, the `make test` suite MUST follow the headless test convention in
 `resources/no-overflow-testing.md` — pump no-overflow/fidelity tests at the project's
@@ -47,9 +47,9 @@ For **mobile** surfaces, the `make test` suite MUST follow the headless test con
 no key content at/under the viewport edge, exactly one app status bar). This is what catches the
 silent-clip class in `make test`; the live render (below) is the backstop that catches the rest.
 
-## The 6 gate agents
+## The 8 gate agents
 
-Spawn all six in parallel (one Agent message). Each gets the **same shared context block**, then
+Spawn all eight in parallel (one Agent message). Each gets the **same shared context block**, then
 its **specific ask**. Each MUST end its report with a one-line `VERDICT:` summarising counts per
 severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the driver applies the
 `gate_strictness` threshold (Low blocks in standard/strict; Info blocks only in strict) to decide pass/fail.
@@ -66,12 +66,14 @@ severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the dr
 
 | Gate | `subagent_type` | Specific ask |
 |------|------------------|--------------|
-| Spec compliance | `Jenny` | Independently verify the implementation matches `spec.md`. Flag missing/incorrect functionality and unmet acceptance criteria. |
-| Guidelines | `claude-md-compliance-checker` | Verify the diff follows `CLAUDE.md` + `.specify/memory/constitution.md` (clean architecture, design tokens, coverage, async-state UX, query discipline). **Where the diff introduces or changes agentic / loop / scheduled-automation behavior, also verify the constitution's Loop Engineering principle** (loop-engineering: phased L1→L2→L3 autonomy, human safety gates + denylists, cost/token budget + stop rule, readiness score before promotion) — a new autonomy level shipped without its human gate, budget, or readiness check is at least **High**. |
-| Simplicity | `code-quality-pragmatist` | Flag over-engineering, premature abstraction, dead indirection introduced by this change. |
-| Reality | `karen` | Run it — endpoints/screens/flows — and report where claimed-done behavior does not actually work. |
-| Task completion | `task-completion-validator` | Confirm each task in `specs/<feature>/tasks.md` is functional end-to-end, not just edited. |
-| UI + design/animation parity | `ui-comprehensive-tester` | **Design mode** — verify **every Visual Target + Animation Inventory row** against **rendered pixels, not spec text**. **Web:** start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/skl-feature/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. **Mobile:** run the `mobile_render` recipe from `project.config.md` (see `resources/mobile-render.md`) — boot the target simulator/emulator (**default iOS iPad**), launch the app, drive it via **Mobile MCP** to each design-driven screen, and **write a real screenshot per screen into `specs/<feature>/verification/`** at the device's `device_logical_size`. Then **visually compare each capture to `references/`** for: (a) content **clipped / cut off at the screen edge** — a scrollable that never reaches its last item still clips, so scroll it to the end; (b) **non-scrollable overflow**; (c) **doubled or missing chrome** (e.g. the app draws its own status bar while the OS bar is also visible, or a bar the design shows is gone); (d) per-element layout / color / spacing fidelity. Any missing element, wrong trigger, or duration/easing outside ±20% is at least **Medium**; **edge-clipping and doubled/missing chrome are at least High**. **No `verification/` render ⇒ no pass** (render gate above): if the simulator/MCP is unavailable, report a **High** finding and request a user-supplied device screenshot — **never** substitute a functional smoke. **Text-only mode:** no Visual Targets — if the feature has UI, functionally smoke the new flow (states, edge cases, errors); if it's non-UI, runtime-smoke the feature's paths. |
+| Spec & completion | `skl-spec-auditor` | Independently verify the implementation matches `spec.md` (missing / incomplete / incorrect / extra, unmet acceptance criteria) **and** that every task in `specs/<feature>/tasks.md` is functional end-to-end — no stubs, TODOs, or mocked integrations passed off as done. |
+| Guidelines | `skl-guideline-auditor` | Verify the diff follows `CLAUDE.md` + `.specify/memory/constitution.md` (clean architecture, design tokens, coverage, async-state UX, query discipline) — including the constitution's **Loop Engineering principle** wherever the diff touches agentic / loop / scheduled-automation behavior (the agent owns that checklist: phased autonomy, human gates + denylists, budget + stop rule, readiness score). |
+| Simplicity | `skl-pragmatist` | Flag over-engineering, premature abstraction, dead indirection introduced by this change. |
+| Reality | `skl-reality-checker` | Run it — endpoints/screens/flows — and report where claimed-done behavior does not actually work. |
+| Correctness | `skl-code-reviewer` | Adversarially review the diff for defects: logic errors, edge/boundary cases, error-handling gaps, races, resource leaks, hot-path perf smells. Every High+ finding must include a concrete failure scenario. |
+| Security | `skl-security-auditor` | Security-review the diff in repo context: injection, authn/authz gaps, committed secrets, unsafe input/file handling, risky new dependencies, prompt-injection into LLM/agent calls. Every High+ finding must include a plausible exploit path. |
+| Test integrity | `skl-test-integrity-auditor` | Read the test diff adversarially: weakened/rewritten assertions, deleted/skipped tests, lowered coverage or gate thresholds, mock-only tests, missing tests for new behavior (constitution TDD). |
+| UI + design/animation parity | `skl-ui-tester` | **Design mode** — verify **every Visual Target + Animation Inventory row** against **rendered pixels, not spec text**. **Web:** start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/skl-feature/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. **Mobile:** run the `mobile_render` recipe from `project.config.md` (see `resources/mobile-render.md`) — boot the target simulator/emulator (**default iOS iPad**), launch the app, drive it via **Mobile MCP** to each design-driven screen, and **write a real screenshot per screen into `specs/<feature>/verification/`** at the device's `device_logical_size`. Then **visually compare each capture to `references/`** for: (a) content **clipped / cut off at the screen edge** — a scrollable that never reaches its last item still clips, so scroll it to the end; (b) **non-scrollable overflow**; (c) **doubled or missing chrome** (e.g. the app draws its own status bar while the OS bar is also visible, or a bar the design shows is gone); (d) per-element layout / color / spacing fidelity. Any missing element, wrong trigger, or duration/easing outside ±20% is at least **Medium**; **edge-clipping and doubled/missing chrome are at least High**. **No `verification/` render ⇒ no pass** (render gate above): if the simulator/MCP is unavailable, report a **High** finding and request a user-supplied device screenshot — **never** substitute a functional smoke. **Text-only mode:** no Visual Targets — if the feature has UI, functionally smoke the new flow (states, edge cases, errors); if it's non-UI, runtime-smoke the feature's paths. |
 
 ## Severity → blocking, at a glance
 
@@ -87,6 +89,6 @@ severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the dr
 
 ## Tuning ("refine as we go")
 
-If a class of finding proves noisy (e.g. `code-quality-pragmatist` Mediums that are stylistic),
+If a class of finding proves noisy (e.g. `skl-pragmatist` Mediums that are stylistic),
 record the agreed exception here and reflect it in the round-evaluation step so the loop converges.
 Do not silently downgrade severities inside an agent — adjust the rule here, in the open.

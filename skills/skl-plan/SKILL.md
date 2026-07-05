@@ -2,7 +2,7 @@
 name: skl-plan
 description: "Plan a feature WITHOUT building it: optional design ingest → speckit specify → speckit clarify (asking you questions), producing a numbered, ready-to-run plan (a speckit feature) marked Loop-Status: ready. A claude.ai/design reference is OPTIONAL (design-driven or text-only, same as /skl-feature). Run it as many times as you like to queue up plans, then execute a batch with /skl-run. This command never builds or runs the QA loop."
 argument-hint: "a one-line intent of what to plan — optionally prefixed with a claude.ai/design project name or UUID for a designed UI feature"
-compatibility: "Requires the .specify/ spec-kit structure and the speckit-* skills. Design-driven (UI) mode also uses the DesignSync tool, reuses skl-feature's render-keyframes.mjs (+ Playwright for web rendering), and spawns the business-analyst agent (.claude/agents/) to cross-check the design against the spec; text-only mode needs none of those. Reads resources/project.config.md for surface defaults. Pairs with /skl-run, which executes the plans this produces."
+compatibility: "Requires the .specify/ spec-kit structure and the speckit-* skills. Design-driven (UI) mode also uses the DesignSync tool, reuses skl-feature's render-keyframes.mjs (+ Playwright for web rendering), and spawns the skl-business-analyst agent (.claude/agents/) to cross-check the design against the spec; text-only mode needs none of those. Reads resources/project.config.md for surface defaults. Pairs with /skl-run, which executes the plans this produces."
 metadata:
   author: "khairul"
   version: "1.0.0"
@@ -70,14 +70,14 @@ skl-feature's renderer (`.claude/skills/skl-feature/resources/render-keyframes.m
    **Visual Targets** + **Animation Inventory** tables.
 7. **Clarify.** Invoke `speckit-clarify` (Skill tool) — up to 5 targeted questions; encode the answers
    back into `spec.md`. This Q&A is the core of `/skl-plan`.
-8. **Business-analyst cross-check *(design mode only; skip entirely in text-only mode)*.** Spawn the
-   `business-analyst` agent (Agent tool) seeded with the **rendered design** (`specs/<feature>/references/`
+8. **skl-business-analyst cross-check *(design mode only; skip entirely in text-only mode)*.** Spawn the
+   `skl-business-analyst` agent (Agent tool) seeded with the **rendered design** (`specs/<feature>/references/`
    + the pulled-design summary) and `spec.md`. Have it **cross-check the design against the spec** and
    return severity-tagged findings: coverage gaps (screens/components/fields and per-screen **states**
    empty/loading/error/success), contradictions, scope mismatch, untestable/ambiguous acceptance
    criteria, and cross-platform gaps. **Fold its findings into `spec.md`** (add the missing user stories
    + acceptance criteria; record any genuine design↔spec **conflicts** in the spec so whoever runs the
-   plan sees them). See `agents/business-analyst.md`.
+   plan sees them). See `agents/skl-business-analyst.md`.
 9. **Mark ready + STOP.** Write a `Loop-Status: ready` line near the top of `spec.md`. Then:
    - Return the repo to the **base branch** you started on (so the next `/skl-plan` creates its
      feature off the same base, not nested inside this plan's branch).
@@ -88,7 +88,7 @@ skl-feature's renderer (`.claude/skills/skl-feature/resources/render-keyframes.m
      - **What it looks like** *(design mode)* — point to the design images, described in plain words.
      - **Where it works** — platforms in plain terms (e.g. "on phone and on the web"), not the
        internal `surface` label.
-     - **Anything to note** — any business-analyst conflicts / open questions in plain language.
+     - **Anything to note** — any skl-business-analyst conflicts / open questions in plain language.
      - **Full details (optional)** — "the complete spec is at `specs/<feature>/spec.md`."
      - End with: "Run `/skl-run` when you're ready to build this (and any other queued plans)."
    - Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-plan ✅ plan NNN ready — <slug>"`.

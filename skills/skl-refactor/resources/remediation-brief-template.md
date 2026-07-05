@@ -1,13 +1,13 @@
 # Remediation brief — <feature> (refactor item <id>) — iteration <N>
 
-> Written by `ultrathink-debugger` after a failing refactor round. The next `speckit-plan` is
+> Written by `skl-debugger` after a failing refactor round. The next `speckit-plan` is
 > seeded with this so plan → tasks target these fixes. Be concrete and file-keyed.
 
 ## Failing gates this round
 
 | Gate | Worst severity | One-line reason |
 |------|----------------|-----------------|
-| <karen / Jenny / make / …> | <Critical/High/Medium> | <what failed — esp. any behavior regression> |
+| <skl-reality-checker / skl-spec-auditor / make / …> | <Critical/High/Medium> | <what failed — esp. any behavior regression> |
 
 ## Root causes
 

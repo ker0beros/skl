@@ -1,6 +1,6 @@
 # Remediation brief — <feature> (fix item <id>) — iteration <N>
 
-> Written after a failing fix round — by `ultrathink-debugger`, or (when the symptom still
+> Written after a failing fix round — by `skl-debugger`, or (when the symptom still
 > reproduces) by a re-run of Superpowers `systematic-debugging` with a new hypothesis. The next
 > `speckit-plan` is seeded with this so plan → tasks target these fixes. Be concrete and file-keyed.
 
@@ -8,7 +8,7 @@
 
 | Gate | Worst severity | One-line reason |
 |------|----------------|-----------------|
-| <karen / Jenny / verification-before-completion / make / …> | <Critical/High/Medium> | <what failed — esp. "symptom still reproduces" or a new regression> |
+| <skl-reality-checker / skl-spec-auditor / verification-before-completion / make / …> | <Critical/High/Medium> | <what failed — esp. "symptom still reproduces" or a new regression> |
 
 ## Did the symptom actually go away?
 - Original reproduction this round: <still reproduces / gone>.
