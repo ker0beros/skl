@@ -42,6 +42,7 @@ classification; an item is missing ONLY if it can't be reliably inferred from th
 the repo — you have Read/Grep/Glob: look in the repo before declaring a gap.
 
 Issue #<n> — <title>
+Labels: <labels>
 <body>
 --- comments ---
 <comments or "(none)">
@@ -71,7 +72,7 @@ the loop will pick the ticket up on its next poll.
 - **`not-ready` + `--auto`** →
   1. flip `pickup_inprogress_label` → `pickup_needsinfo_label` (commands in `pickup-loop.md`);
   2. post the request-info comment (the agent's draft, driver-reviewed);
-  3. add the id to the state-file skip-list; record the result as `needs-info`;
+  3. add the id to the state-file skip-list; record the result as `needs-info` and clear the in-flight ticket;
   4. `bash ~/.claude/notify-telegram.sh "[<project>] /skl-pickup-ticket ⏸ #<n> needs info — labeled loop-needs-info"`;
   5. **loop mode → step 1** (next ticket); **`#N` mode → STOP**.
 - **`not-ready`, interactive (no `--auto`)** → fire the await ping, then `AskUserQuestion`
@@ -80,7 +81,7 @@ the loop will pick the ticket up on its next poll.
     them into the step-3 sub-skill invocation, → step 3.
   - **Route to needs-info** → the `--auto` path above.
   - **Skip this ticket** → flip `pickup_inprogress_label` back to `pickup_label` (a future run
-    can claim it), skip-list the id, → step 1 (loop) / STOP (`#N`).
+    can claim it), skip-list the id + clear the in-flight ticket, → step 1 (loop) / STOP (`#N`).
 - **`#N` tickets may carry no lifecycle label** (an explicit number bypasses the gate) — use
   add-only labeling and tolerate a failed remove (`--remove-label` on an absent label is not an
   error worth stopping for).

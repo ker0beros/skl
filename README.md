@@ -174,7 +174,7 @@ new `loop-ready` ones, so a crash never strands a ticket. (Missing labels are au
 
 > **The `loop-ready` queue is the human gate.** `/skl-pickup-ticket` only *starts* work on issues a human
 > has labeled `loop-ready` — it never applies that label itself (though it does drive the downstream
-> `loop-in-progress` / `loop-done` / `loop-deferred` / `loop-needs-info` transitions). Curate the queue (label issues
+> `loop-in-progress` / `loop-done` / `loop-deferred` / `loop-needs-info` transitions, and an interactive readiness-gate **Skip** re-queues at the human's direction). Curate the queue (label issues
 > `loop-ready`, optionally filed via `/skl-create-ticket`), then let the loop drain it into reviewable
 > PRs; you review + merge (`loop-done` = PR up, awaiting you). `/skl-resume` can continue a pickup loop
 > after a usage-limit reset. This is the loop-engineering human-gate + PR-not-merge posture in practice.
@@ -219,7 +219,7 @@ skills/skl-feature/  # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs 
 skills/skl-refactor/ # SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
 skills/skl-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + remediation templates)
 skills/skl-create-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
-skills/skl-pickup-ticket/  # SKILL.md + resources/ (pickup-loop + state template) — autonomous loop-ready → PR runner
+skills/skl-pickup-ticket/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check) — autonomous loop-ready → PR runner
 skills/skl-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans
 skills/skl-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses skl-feature's gate)
 skills/skl-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
