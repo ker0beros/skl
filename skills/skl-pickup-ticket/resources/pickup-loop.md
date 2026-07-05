@@ -2,7 +2,7 @@
 
 > The exact per-provider commands for **polling** (resume `loop-in-progress` first, then `loop-ready`),
 > **claiming** a ticket (`loop-ready` → `loop-in-progress`), **opening the PR/MR** + marking it
-> `loop-done`, **deferring** (`loop-in-progress` → `loop-deferred`) with a findings comment, and the
+> `loop-done`, **deferring** (`loop-in-progress` → `loop-deferred`) with a findings comment, **routing to needs-info** (`loop-in-progress` → `loop-needs-info`) with a request-info comment, and the
 > **wait** between polls. SKILL.md sequences these; this file is the source of truth for the commands.
 > Reuse `skl-fix/resources/issue-access.md` if a fetch hits an auth wall. Never merge; never apply
 > `loop-ready` yourself (a human curates that queue) — but the loop *does* drive every later transition.
@@ -32,6 +32,7 @@ gh label create loop-ready       --color 0e8a16 --description "Eligible for the 
 gh label create loop-in-progress --color fbca04 --description "The loop is working this ticket"          2>/dev/null || true
 gh label create loop-done        --color 1d76db --description "Loop finished — PR open, awaiting review" 2>/dev/null || true
 gh label create loop-deferred    --color d93f0b --description "Loop couldn't converge — needs a human"   2>/dev/null || true
+gh label create loop-needs-info  --color d4c5f9 --description "Loop needs more info — answer the comment, then re-label loop-ready" 2>/dev/null || true
 ```
 
 **Poll — resume tier first, then the ready tier** (fetch a small batch each, drop skip-listed ids, take
@@ -74,6 +75,13 @@ gh issue edit <n> --remove-label "loop-in-progress" --add-label "loop-deferred"
 gh issue comment <n> --body-file <temp-findings-file>
 ```
 
+**On needs-info (readiness gate) — relabel + comment** (an unlabeled `#N` ticket: drop the
+`--remove-label`, keep the `--add-label`):
+```bash
+gh issue edit <n> --remove-label "loop-in-progress" --add-label "loop-needs-info"
+gh issue comment <n> --body-file <temp-request-info-file>
+```
+
 ---
 
 ## GitLab (`glab`)
@@ -87,6 +95,7 @@ uses `GITLAB_HOST=<host>`). If missing/unauth → `brew install glab`, `! glab a
 [GITLAB_HOST=<host>] glab label create --name loop-in-progress --color '#fbca04' --description "The loop is working this ticket"          2>/dev/null || true
 [GITLAB_HOST=<host>] glab label create --name loop-done        --color '#1d76db' --description "Loop finished — MR open, awaiting review" 2>/dev/null || true
 [GITLAB_HOST=<host>] glab label create --name loop-deferred    --color '#d93f0b' --description "Loop couldn't converge — needs a human"   2>/dev/null || true
+[GITLAB_HOST=<host>] glab label create --name loop-needs-info  --color '#d4c5f9' --description "Loop needs more info — answer the comment, then re-label loop-ready" 2>/dev/null || true
 ```
 
 **Poll — resume tier first, then the ready tier.** The API is the most reliable JSON source:
@@ -129,6 +138,13 @@ git push -u origin skl-pickup/<n>-<slug>
 [GITLAB_HOST=<host>] glab issue note <iid> --message "$(cat <temp-findings-file>)"
 ```
 
+**On needs-info (readiness gate) — relabel + comment** (an unlabeled `#N` ticket: drop the
+`--unlabel`, keep the `--label`):
+```bash
+[GITLAB_HOST=<host>] glab issue update <iid> --unlabel "loop-in-progress" --label "loop-needs-info"
+[GITLAB_HOST=<host>] glab issue note <iid> --message "$(cat <temp-request-info-file>)"
+```
+
 ---
 
 ## Classifying bug vs feature (content-based)
@@ -141,7 +157,7 @@ Read the title + body; do **not** rely on type labels:
 - Ambiguous → without `--auto`, ask once; with `--auto`, pick the better fit (new behavior ⇒ feature,
   described defect ⇒ fix).
 
-Pass `--auto` straight through to the chosen sub-skill so it runs zero-prompt.
+Classification feeds the **readiness gate** (SKILL.md step 2.5 + `readiness-check.md`) before any sub-skill runs. Pass `--auto` straight through to the chosen sub-skill so it runs zero-prompt.
 
 ---
 
