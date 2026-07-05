@@ -22,7 +22,7 @@ empty_limit: 3        # from pickup_empty_limit (ignored under --alive)
 ## In-flight (the ticket currently claimed as loop-in-progress; cleared when it resolves)
 in_flight: —          # e.g. "#12 — null-guard — started <ISO-8601>"; — (empty) between tickets
 
-## Skip-list (deferred this session — not re-picked)
+## Skip-list (deferred / needs-info this session — not re-picked)
 - #<iid> — <slug> — deferred <ISO-8601>
 
 ## Results (append one row per resolved ticket)
@@ -30,6 +30,7 @@ in_flight: —          # e.g. "#12 — null-guard — started <ISO-8601>"; — 
 |---|------|--------|---------|-------|-------|------------|----|
 | 12 | bug | skl-pickup/12-null-guard | shipped | loop-done | <pr-url> | 3 | <ISO-8601> |
 | 15 | feature | skl-pickup/15-export-csv | deferred | loop-deferred | — | 10 | <ISO-8601> |
+| 18 | bug | — | needs-info | loop-needs-info | — | 0 | <ISO-8601> |
 
 ## Status
 State: running        # running | waiting(next poll <ISO-8601>) | exited(<reason>)
@@ -39,7 +40,7 @@ State: running        # running | waiting(next poll <ISO-8601>) | exited(<reason
 - **empty_polls** is the exit trigger: at `empty_limit` (default 3) the loop **exits** (manual re-run
   needed). `--alive` never exits, so `empty_polls` is informational only.
 - **Skip-list** holds tickets deferred in this session so neither poll tier re-picks them; because
-  deferral flips the label to `loop-deferred` (off both `loop-ready` and `loop-in-progress`), they drop
+  deferral / the readiness gate flips the label to `loop-deferred` / `loop-needs-info` (off both `loop-ready` and `loop-in-progress`), they drop
   out of the poll queries anyway — the skip-list is the belt-and-suspenders guard within a session.
 - **In-flight** records the ticket currently labeled `loop-in-progress`. On re-entry (ScheduleWakeup or a
   cold restart) the **resume** poll re-picks any `loop-in-progress` ticket, so the label is the durable
