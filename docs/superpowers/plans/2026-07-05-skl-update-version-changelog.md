@@ -29,7 +29,7 @@
 **Interfaces:**
 - Produces: `VERSION` (single line `1.1.0`) and `CHANGELOG.md` with `## <semver> — <YYYY-MM-DD>` section headings — Task 2's SKILL.md text refers to both files by these exact names/formats.
 
-- [ ] **Step 1: Create `VERSION`**
+- [x] **Step 1: Create `VERSION`**
 
 File content (single line, trailing newline):
 
@@ -37,7 +37,7 @@ File content (single line, trailing newline):
 1.1.0
 ```
 
-- [ ] **Step 2: Create `CHANGELOG.md`**
+- [x] **Step 2: Create `CHANGELOG.md`**
 
 ```markdown
 # Changelog
@@ -58,12 +58,12 @@ on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the ru
   loop-ready ticket queue workflow.
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Run: `cat VERSION && grep -c '^## ' CHANGELOG.md`
 Expected: `1.1.0` and `2`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add VERSION CHANGELOG.md
@@ -81,7 +81,7 @@ git commit -m "feat: add VERSION + CHANGELOG.md release artifacts"
 - Consumes: `~/.skl/VERSION` and `~/.skl/CHANGELOG.md` from Task 1 (via the `~/.skl` cache).
 - Produces: the stamp file contract `.claude/.skl-version` (single semver line) that future runs read.
 
-- [ ] **Step 1: Update the frontmatter**
+- [x] **Step 1: Update the frontmatter**
 
 Bump `version: "1.1.0"` → `version: "1.2.0"`. In `description:`, after the first sentence ("Update this project's skl install to the latest version on GitHub."), insert:
 
@@ -89,7 +89,7 @@ Bump `version: "1.1.0"` → `version: "1.2.0"`. In `description:`, after the fir
 Reports your installed → new version and prints the changelog of what's new.
 ```
 
-- [ ] **Step 2: Extend the "What this command does" section**
+- [x] **Step 2: Extend the "What this command does" section**
 
 After the bullet list ending "…the shared agents (the QA panel + the specialist agents in `agents/`).", add one paragraph:
 
@@ -99,7 +99,7 @@ Every run reports **your installed version → the incoming version** and prints
 installed version in `.claude/.skl-version`.
 ```
 
-- [ ] **Step 3: Replace step 2 of `## Steps`**
+- [x] **Step 3: Replace step 2 of `## Steps`**
 
 Replace the entire current step 2 ("**Show what's new.** If `OLD` is set …") with:
 
@@ -123,7 +123,7 @@ Replace the entire current step 2 ("**Show what's new.** If `OLD` is set …") w
      `git -C ~/.skl log --oneline "$OLD..$NEW"` beneath as supplementary detail.
 ```
 
-- [ ] **Step 4: Add the version stamp to step 3 of `## Steps`**
+- [x] **Step 4: Add the version stamp to step 3 of `## Steps`**
 
 After the **Agents** bullet and before the "**Do not** regenerate…" bullet, insert:
 
@@ -132,7 +132,7 @@ After the **Agents** bullet and before the "**Do not** regenerate…" bullet, in
      installed version (skip silently if `VERSION` is absent upstream).
 ```
 
-- [ ] **Step 5: Make step 4 of `## Steps` version-based**
+- [x] **Step 5: Make step 4 of `## Steps` version-based**
 
 Replace the Telegram sentence in step 4 with:
 
@@ -142,7 +142,7 @@ Replace the Telegram sentence in step 4 with:
 
 (The `${NEW_V:-$NEW}` fallback keeps the SHA when `VERSION` is absent upstream.)
 
-- [ ] **Step 6: Add the invariant to `## Rules & invariants`**
+- [x] **Step 6: Add the invariant to `## Rules & invariants`**
 
 After the "**Config is preserved.**" bullet, insert:
 
@@ -152,12 +152,12 @@ After the "**Config is preserved.**" bullet, insert:
   Reporting failures fall back to SHA output and never block the sync.
 ```
 
-- [ ] **Step 7: Verify**
+- [x] **Step 7: Verify**
 
 Run: `grep -c '.skl-version' skills/skl-update/SKILL.md && grep -n 'CURR_V\|NEW_V' skills/skl-update/SKILL.md | head -3 && grep -n 'version: "1.2.0"' skills/skl-update/SKILL.md`
 Expected: count ≥ 4; CURR_V/NEW_V hits in step 2; the frontmatter line number for 1.2.0.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add skills/skl-update/SKILL.md
@@ -175,7 +175,7 @@ git commit -m "feat(skl-update): report version + changelog, stamp .claude/.skl-
 **Interfaces:**
 - Consumes: the `VERSION`/`CHANGELOG.md` names and formats from Task 1.
 
-- [ ] **Step 1: Create `CLAUDE.md`**
+- [x] **Step 1: Create `CLAUDE.md`**
 
 ```markdown
 # skl repo instructions
@@ -193,7 +193,7 @@ Any change to `skills/` or `agents/` that lands on `main` MUST, in the same chan
 never see a changelog for your change.
 ```
 
-- [ ] **Step 2: Add the README pointer**
+- [x] **Step 2: Add the README pointer**
 
 In `README.md`, after the paragraph ending "…makes it safe to re-run as an update)." (line 305) and before `## Credits`, insert:
 
@@ -202,12 +202,12 @@ Every release bumps the root `VERSION` and adds a `CHANGELOG.md` entry (rule in 
 so `/skl-update` can show you installed → new version and exactly what changed.
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Run: `grep -n 'Release rule' CLAUDE.md && grep -n 'CHANGELOG.md' README.md`
 Expected: the rule heading in CLAUDE.md; one hit in README's Updating section.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add CLAUDE.md README.md
