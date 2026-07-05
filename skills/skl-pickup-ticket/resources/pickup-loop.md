@@ -63,7 +63,15 @@ gh pr create \
   --title "fix(#<n>): <slug>" \        # or "feat(#<n>): <slug>"
   --body-file <temp-body-file>          # summary + QA evidence + a line "Closes #<n>"
 ```
-`gh pr create` prints the PR URL — record it. **Never** run `gh pr merge`.
+`gh pr create` prints the PR URL — record it. **Never** run an immediate `gh pr merge` — the only
+allowed form is the `--auto` one below, which delegates the merge to GitHub's CI gate.
+
+**`--merge-on-green` only — enable auto-merge right after create** (method from `automerge_method`;
+requires the repo's allow-auto-merge setting + required checks on the base, which the calling
+`/skl-auto` verifies in its Phase 0):
+```bash
+gh pr merge <pr-url> --auto --squash
+```
 
 **On success — mark done** (after the PR is open; the issue stays open until the PR merges via `Closes #<n>`):
 ```bash
@@ -126,7 +134,13 @@ git push -u origin skl-pickup/<n>-<slug>
   --description "$(cat <temp-body-file>)" \   # ends with "Closes #<iid>"
   --yes
 ```
-`glab mr create` prints the MR URL — record it. **Never** run `glab mr merge`.
+`glab mr create` prints the MR URL — record it. **Never** run an immediate `glab mr merge` — the
+only allowed form is the auto-merge one below (merge-when-pipeline-succeeds).
+
+**`--merge-on-green` only — enable merge-when-pipeline-succeeds right after create:**
+```bash
+[GITLAB_HOST=<host>] glab mr merge <iid> --auto-merge
+```
 
 **On success — mark done** (after the MR is open; the issue stays open until the MR merges via `Closes #<iid>`):
 ```bash
@@ -178,6 +192,8 @@ Then **end the turn**. On wake the skill re-enters, re-reads `.skl-pickup/state.
 - `--alive` → always re-arm (never exits on empty polls).
 - otherwise → re-arm while the empty-poll counter `< pickup_empty_limit`; at the limit, **exit** and require
   a manual re-run.
+- `--drain` → **never arm a wakeup**: on the first empty poll write `State: exited(drained)` and
+  STOP (driver mode — the calling `/skl-auto` owns all polling).
 
 If `ScheduleWakeup` can't be armed standalone, run under the built-in loop: `/loop /skl-pickup-ticket`
 (self-pacing). A cloud cron is **not** a substitute — it can't drive the in-session build loop.
