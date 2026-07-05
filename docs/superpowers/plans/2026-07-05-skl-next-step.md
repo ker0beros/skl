@@ -235,7 +235,7 @@ Run: `head -15 skills/skl-next-step/SKILL.md`
 Expected: YAML frontmatter opens/closes with `---`, `name: skl-next-step` on line 2, `user-invocable: true` present.
 
 Run: `grep -c '^## ' skills/skl-next-step/SKILL.md`
-Expected: `7` (User Input, What this command does, Phase 1, Phase 2, Phase 3, Phase 4, Rules & invariants).
+Expected: `12` — 7 section headers (User Input, What this command does, Phase 1, Phase 2, Phase 3, Phase 4, Rules & invariants) + 5 `## ` lines inside the Phase 3 fenced example (grep can't see fences).
 
 - [ ] **Step 3: Commit**
 
