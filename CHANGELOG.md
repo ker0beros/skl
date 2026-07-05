@@ -4,6 +4,16 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 1.4.0 — 2026-07-05
+
+- **New skill `/skl-next-step`** — the read-only triage advisor: sweeps issue `loop-*` labels,
+  open `skl-pickup/*` PRs + unmerged review branches, `Loop-Status` plans, and setup/housekeeping
+  drift; prints a current-state snapshot first, ranks the findings on a fixed unblock-first
+  ladder (setup → unblock the pipeline → start new work → housekeeping), names the single next
+  step, and offers (human-gated) to run it. Strictly read-only — no labels, comments, branches,
+  or writes; collectors it can't run are skipped with a reason.
+- skl-help: `skl-next-step` listed under **Help**; the workflow blurb points at it for "what now?".
+
 ## 1.3.0 — 2026-07-05
 
 - skl-pickup-ticket: new **readiness gate** (step 2.5) — before building, an
