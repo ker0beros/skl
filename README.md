@@ -84,7 +84,9 @@ visual spec, and verifies design **and animation** parity (keyframe + behavior c
 ```
 
 - **`/skl-plan`** does only the planning half — optional design ingest → `specify` → `clarify`
-  (asking you questions) — and writes a **numbered, ready-to-run** spec (`Loop-Status: ready`). It
+  (asking you questions) → an `skl-business-analyst` cross-check of the spec against the design
+  (design mode) or your intent + answers (text-only) — and writes a **numbered, ready-to-run** spec
+  (`Loop-Status: ready`). It
   **never builds**. Run it as many times as you want to queue plans. Same optional-design behavior as
   `/skl-feature` (design-driven or text-only).
 - **`/skl-run`** lists every `ready` plan, asks which to run (**one / multiple / all**), then runs each
@@ -228,7 +230,8 @@ The 8 gate agents — `skl-spec-auditor` (spec + task completion), `skl-guidelin
 `skl-code-reviewer` (adversarial bug hunt), `skl-security-auditor` (security pass),
 `skl-test-integrity-auditor` (test/gate tampering), `skl-ui-tester` (UI + design/animation parity) —
 plus `skl-debugger` (the failure-time fixer), `skl-business-analyst` (used in `/skl-feature` +
-`/skl-plan` Phase A to cross-check the design against the spec), and `skl-refactoring-specialist`
+`/skl-plan` Phase A of **both modes** to cross-check the spec against its source — the rendered
+design when there is one, the intent + clarify answers text-only), and `skl-refactoring-specialist`
 (used in `/skl-refactor` to audit smells and perform behavior-preserving refactors).
 
 ## Prerequisites (on the target project)
