@@ -4,6 +4,25 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 1.6.0 — 2026-07-06
+
+- **Removed skill `/skl-design`; folded it into `/skl-plan --design`.** The design-ideation
+  front-step — confirm or define a design system, pick platforms, brainstorm the flow into
+  screens/states via Superpowers, and write a ready-to-paste Claude Design prompt — is now an
+  opt-in flag on `/skl-plan` rather than a standalone command, then it continues straight into the
+  plan. **Migrate:** `/skl-design <flow>` → `/skl-plan --design <flow>`. The Claude Design prompt +
+  design-system prompt still land under `.skl-design/`; the templates moved to
+  `skl-plan/resources/`. Plain `/skl-plan` (no `--design`) is unchanged and still needs no
+  Superpowers; only `--design` uses `brainstorming`.
+- skl-init: the Superpowers prerequisite check now points to `/skl-plan --design` (was `/skl-design`).
+- skl-update: now **prunes `skl-*` skills removed from `main`** so a deleted command (like
+  `/skl-design`) actually disappears from existing installs on update — previously it only added or
+  overwrote, leaving stale skills behind. The prune is guarded (runs only when the cache lists ≥ 1
+  skill, so a failed fetch never wipes your skills) and scoped to the `skl-*` namespace; agents and
+  non-skl skills are never pruned, and each `project.config.md` is still preserved.
+- Command surface: net 15 → 14 skills (from a command-surface audit; `/skl-next-step` and
+  `/skl-gate` were reviewed and deliberately kept as-is).
+
 ## 1.5.0 — 2026-07-06
 
 - **New skill `/skl-auto`** — the hands-off driver: runs `/skl-next-step`'s triage, then

@@ -1,9 +1,10 @@
-# Claude Design prompt — <feature> (skl-design Step 4 output)
+# Claude Design prompt — <feature> (`/skl-plan --design` prompt output)
 
-> The shape of the prompt `/skl-design` writes to `.skl-design/<slug>/claude-design-prompt.md`.
-> Fill every `<…>` from the design system (Step 1), the selected platforms (Step 2), and the Superpowers
-> brainstorm (Step 3). The user pastes this into **claude.ai/design** to generate the UI. Keep it
-> concrete — name screens, states, and interactions; reference the design system rather than re-deriving it.
+> The shape of the prompt `/skl-plan --design` writes to `.skl-design/<slug>/claude-design-prompt.md`.
+> Fill every `<…>` from the design system (design-system step), the selected platforms (platforms step),
+> and the Superpowers brainstorm (flow step). The user pastes this into **claude.ai/design** to generate
+> the UI. Keep it concrete — name screens, states, and interactions; reference the design system rather
+> than re-deriving it.
 
 ---
 

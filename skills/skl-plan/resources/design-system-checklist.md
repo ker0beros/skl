@@ -1,7 +1,7 @@
-# Design-system checklist — step-by-step (skl-design Step 1, "No")
+# Design-system checklist — step-by-step (`/skl-plan --design`, design-system step, "No")
 
-> Used by `/skl-design` when the user has **no** design system in Claude Design yet. Drive it with
-> Superpowers `brainstorming` — settle each item **one at a time**, asking the user, then write the
+> Used by `/skl-plan --design` when the user has **no** design system in Claude Design yet. Drive it
+> with Superpowers `brainstorming` — settle each item **one at a time**, asking the user, then write the
 > result as `.skl-design/design-system-prompt.md` (a prompt the user pastes into claude.ai/design to
 > create the system **first**, before the feature screens). Don't invent a brand the user doesn't want;
 > brainstorm options and let them choose.
