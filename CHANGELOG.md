@@ -4,6 +4,22 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 2.1.0 — 2026-07-06
+
+- **`/skl-ticket` can seed a ticket from a plan or FSD doc.** Pass `--plan <path>` / `--fsd <path>`
+  (or a bare / `@` path to a `.md`/`.markdown`/`.txt` file), or run `/skl-ticket` with no source and it
+  offers the **most-recent** plan across `~/.claude*/plans/` (Claude plan-mode) and `docs/**/plans/` ·
+  `docs/**/specs/` (Superpowers) to confirm. The doc is **distilled into the house-style ticket** and
+  the **full plan is preserved verbatim** in a collapsible `<details>` appendix with a top-of-body
+  `Plan-Ref:` marker (Jira uses an `h2. Full plan` section). A **size guard** warns instead of silently
+  truncating an oversize doc. Plain rough-description tickets are unchanged. New resource
+  `skills/skl-ticket/resources/plan-source.md`.
+- **`/skl-do` reuses an attached plan.** When a ticket body carries `Plan-Ref:` + a `📋 Full plan`
+  block, `speckit-specify` is seeded from that plan **verbatim** (the authored intent) instead of
+  re-deriving the spec from title + body alone — the up-front planning is no longer thrown away.
+- Docs: README "The flow" + the `/skl-ticket` / `/skl-do` sections updated. `metadata.version` bumped —
+  `skl-ticket` 1.0.0 → 1.1.0, `skl-do` 1.0.0 → 1.1.0.
+
 ## 2.0.0 — 2026-07-06
 
 - **skl is now a lean, human-gated, ticket-based toolkit (14 → 8 commands).** The one sanctioned flow:

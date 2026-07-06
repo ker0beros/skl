@@ -16,7 +16,9 @@ merges for you:
 
 1. **Plan** — brainstorm a feature or debug an issue with
    [Superpowers](https://github.com/obra/Superpowers) (`brainstorming` / `systematic-debugging`).
-2. **Capture** — file it as a ticket on **GitHub / GitLab** with **`/skl-ticket`**.
+2. **Capture** — file it as a ticket on **GitHub / GitLab** with **`/skl-ticket`** — or pass your plan
+   or FSD doc (`--plan <path>` / `--fsd <path>`) and it's distilled into the ticket and preserved
+   verbatim for `/skl-do` to reuse.
 3. **Human gate → run** — review the ticket, label it **`loop-ready`**, then run
    **`/skl-do`**. It works that one ticket through the QA-gated build loop, opens a **PR**
    (never merges), and **stops**. You review and **merge** the PR, then re-run `/skl-do`
@@ -25,7 +27,7 @@ merges for you:
 | Skill | Input | What it does |
 |-------|-------|--------------|
 | **`/skl-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
-| **`/skl-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Never applies a `loop-*` label — promoting to `loop-ready` is your decision |
+| **`/skl-ticket`** | a **rough issue**, or a **plan / FSD doc** | Drafts a structured ticket in the repo's house style — from a rough description **or a plan/FSD doc** (`--plan`/`--fsd <path>`: a Claude plan-mode file, a Superpowers plan, or a spec — distilled into the ticket and preserved verbatim for `/skl-do` to reuse) — then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Never applies a `loop-*` label — promoting to `loop-ready` is your decision |
 | **`/skl-do`** | (optional) **`#N`**; `--auto` | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
 | **`/skl-next`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
 | **`/skl-strictness`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
@@ -58,13 +60,19 @@ then resumes.) The constitution it writes is what the QA `skl-guideline-auditor`
 ```
 /skl-ticket <rough description>          # auto-detects the provider from the git remote
 /skl-ticket jira: <rough description>    # or name the provider explicitly
+/skl-ticket --plan <path>                # seed the ticket from a Claude/Superpowers plan
+/skl-ticket --fsd docs/login-fsd.md      # …or from a functional spec doc
+/skl-ticket                              # no source → offers the most-recent plan to confirm
 ```
-Turns a rough description into a well-structured ticket in the repo's house style, shows the full
-draft, and files it **only after you pick Create** (a Create / Edit / Cancel gate — the whole point).
-Auto-detects the provider from the git remote — **GitHub** (`gh`), **GitLab** (`glab`, incl.
-self-hosted), or **Jira** (Atlassian MCP) — asking only when it's unsure. It never applies a `loop-*`
-label: promoting an issue to **`loop-ready`** is a human decision (that queue is what `/skl-do`
-works, one ticket at a time).
+Turns a rough description **— or a plan / FSD doc —** into a well-structured ticket in the repo's house
+style, shows the full draft, and files it **only after you pick Create** (a Create / Edit / Cancel gate
+— the whole point). Given a plan/FSD (`--plan`/`--fsd <path>`, a bare/`@` path, or auto-detected from
+`~/.claude*/plans` and `docs/**/plans`), it distills the doc into the house style **and preserves the
+full plan verbatim** in a collapsible appendix with a `Plan-Ref:` marker — so `/skl-do` reuses your
+planning instead of re-deriving the spec. Auto-detects the provider from the git remote — **GitHub**
+(`gh`), **GitLab** (`glab`, incl. self-hosted), or **Jira** (Atlassian MCP) — asking only when it's
+unsure. It never applies a `loop-*` label: promoting an issue to **`loop-ready`** is a human decision
+(that queue is what `/skl-do` works, one ticket at a time).
 
 ## `/skl-do` — work one `loop-ready` ticket into a PR
 
@@ -77,7 +85,8 @@ The **ticket runner**. With no number it takes the **oldest open issue labeled `
 explicit `#N` works that exact issue (bypassing the label gate). It classifies the ticket
 (bug → framed as a fix, feature → as-is), **readiness-gates it** (an `skl-business-analyst` check — a
 ticket too vague to work is labeled `loop-needs-info` with a comment listing what's missing, instead
-of burning build iterations), builds it through the QA-gated loop it owns (`speckit specify + clarify`
+of burning build iterations), builds it through the QA-gated loop it owns — **reusing a plan/FSD the
+ticket carries** (from `/skl-ticket --plan`/`--fsd`) to seed the spec — (`speckit specify + clarify`
 → a human spec-review gate → `plan → … → implement` → an 8-agent QA panel, max 10 iterations),
 **opens a PR that `Closes` the issue** — pushing a `skl-do/*` branch — and **stops**.
 It **never merges** and never auto-advances: you review and merge the PR, then re-run
