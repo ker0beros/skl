@@ -4,6 +4,23 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 1.5.0 — 2026-07-06
+
+- **New skill `/skl-auto`** — the hands-off driver: runs `/skl-next-step`'s triage, then
+  autonomously resumes stranded tickets + drains the `loop-ready` queue
+  (`/skl-pickup-ticket --auto --drain`) and batch-runs ready plans (`/skl-run --auto`), opening
+  PRs that **auto-merge into `dev` on green CI** (provider merge-when-green; never main/master;
+  `--no-merge` opts out; skipped with a digest note when the repo has no required checks).
+  Human-only work goes to ONE deduped Telegram digest. **`--promote[=N]`** (default OFF)
+  promotes up to N **trusted-author** tickets (owner/member/collaborator) to `loop-ready` — the
+  flag-gated exception to the human queue gate, each promotion audited. `--alive` re-polls every
+  30 min; otherwise "nothing to be done" exits. State in `.skl-auto/state.md`.
+- skl-pickup-ticket: new **`--drain`** (driver mode — exit on the first empty poll, no wakeup,
+  no ping) and **`--merge-on-green`** (PR targets `automerge_base`, default `dev`, and merges
+  itself once CI passes; new config keys `automerge_base` / `automerge_method`).
+- skl-resume: resumes `/skl-auto` first when `.skl-auto/state.md` shows an interrupted run.
+- skl-help: new **Autonomous** group (`skl-pickup-ticket` · `skl-auto`).
+
 ## 1.4.0 — 2026-07-05
 
 - **New skill `/skl-next-step`** — the read-only triage advisor: sweeps issue `loop-*` labels,
