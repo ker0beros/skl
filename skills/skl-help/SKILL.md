@@ -1,7 +1,7 @@
 ---
 name: skl-help
-description: "List every skl command with a one-line explanation and the recommended workflow. Reads the installed skl-* skills so the list always reflects what's actually available. Pass a command name (e.g. skl-run) for its full details."
-argument-hint: "(optional) a command name for full detail, e.g. skl-run — empty lists everything"
+description: "List every skl command with a one-line explanation and the recommended workflow. Reads the installed skl-* skills so the list always reflects what's actually available. Pass a command name (e.g. skl-do) for its full details."
+argument-hint: "(optional) a command name for full detail, e.g. skl-do — empty lists everything"
 metadata:
   author: "khairul"
   version: "1.0.0"
@@ -16,8 +16,8 @@ disable-model-invocation: true
 $ARGUMENTS
 ```
 
-If the input names a specific command (with or without the leading `/`, e.g. `skl-run` or
-`/skl-run`), show **just that one** in full. Otherwise list **all** commands.
+If the input names a specific command (with or without the leading `/`, e.g. `skl-do` or
+`/skl-do`), show **just that one** in full. Otherwise list **all** commands.
 
 ---
 
@@ -43,27 +43,26 @@ rather than a hard-coded list.
    command show `/<name> <argument-hint>` and the **first sentence** of its `description`:
 
    - **Setup** — `skl-init`
-   - **Build a feature** — `skl-feature` (single, end-to-end)
-   - **Plan & batch** — `skl-plan` (queue specs) · `skl-run` (run one/multiple/all)
-   - **Maintain** — `skl-refactor` (toward the constitution) · `skl-fix` (root-cause bug fixes)
-   - **Controls** — `skl-gate` (QA strictness)
-   - **Autonomous** — `skl-pickup-ticket` (drain the loop-ready queue) · `skl-auto` (triage → run authorized work → optional promote; auto-merge on green)
+   - **Tickets** — `skl-ticket` (file an issue on GitHub/GitLab/Jira) · `skl-do` (build the oldest `loop-ready` ticket into a PR, then stop)
+   - **Controls** — `skl-strictness` (QA strictness)
    - **Ops** — `skl-update` (pull latest) · `skl-resume` (continue after a usage-limit reset)
-   - **Help** — `skl-help` · `skl-next-step` (what should I do now?)
+   - **Help** — `skl-help` · `skl-next` (what should I do now?)
 
 4. **Append the workflow + notes** (after the list):
 
-   > **Typical flow:** `skl-init` once → then `skl-feature` for a single feature, **or** `skl-plan`
-   > ×N to queue specs then `skl-run` to batch them. Use `skl-refactor` / `skl-fix` on existing
-   > code, `skl-gate` to set strictness, `skl-resume` if a usage limit interrupts a long run, and
-   > `skl-update` to pull the latest. Not sure what's next? `skl-next-step` triages your
-   > issues / PRs / plans into one recommended step. Fully hands-off? `skl-auto` runs everything
-   > already authorized (add `--promote` / `--alive` / `--no-merge` to tune its autonomy).
+   > **Typical flow:** `skl-init` once. Then the ticket flow: **1)** plan with Superpowers
+   > (`brainstorming` a feature or `systematic-debugging` a bug), **2)** capture it as a ticket with
+   > `skl-ticket` (GitHub/GitLab), **3)** review the ticket, label it `loop-ready`, and run
+   > `skl-do` — it builds the oldest `loop-ready` ticket into a PR, then **stops**; you
+   > review & merge the PR, then re-run it for the next. Use `skl-strictness` to set QA strictness,
+   > `skl-resume` if a usage limit or a context `/clear` interrupts a run (it continues from the
+   > checkpoint), and `skl-update` to pull the latest. Not sure what's next? `skl-next` triages your
+   > issues / PRs into one recommended step.
    >
    > **Notes:** per-project config (surface, gate commands, `gate_strictness`) lives in each skill's
-   > `resources/project.config.md`. `skl-feature` / `skl-plan` take an **optional** claude.ai/design
-   > reference (design-driven) or work from plain text (text-only). `skl-fix` needs the **Superpowers**
-   > plugin. The QA loops pass at 0 Critical / 0 High / 0 Medium (plus Low/Info per `skl-gate`).
+   > `resources/project.config.md`. A ticket can name a **claude.ai/design** reference for a
+   > design-driven build (else `skl-do` builds text-only). The QA loop passes at 0 Critical / 0 High /
+   > 0 Medium (plus Low/Info per `skl-strictness`). The planning step (step 1) uses the **Superpowers** plugin.
 
 ---
 

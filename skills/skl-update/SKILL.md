@@ -26,7 +26,7 @@ Every run reports **your installed version → the incoming version** and prints
 installed version in `.claude/.skl-version`.
 
 …and **preserves** every `.claude/skills/*/resources/project.config.md` (surface default, gate
-commands, and your `gate_strictness` choice from `/skl-gate`).
+commands, and your `gate_strictness` choice from `/skl-strictness`).
 
 It does **not** touch Spec Kit / the `speckit-*` skills, your
 `specs/`, or your code.

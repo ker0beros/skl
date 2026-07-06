@@ -1,14 +1,14 @@
-# skl-feature — project config (EXAMPLE / template)
+# skl-do — project config (EXAMPLE / template)
 #
 # /skl-init generates `project.config.md` from this template, auto-detecting the values for the
-# project (surface + gate commands). The skl-feature SKILL reads `project.config.md` at runtime for
+# project (surface + gate commands). The skl-do SKILL reads `project.config.md` at runtime for
 # the surface default and the gate commands. You can hand-edit `project.config.md` anytime.
 
 project_name: <project>
 project_root: </abs/path/to/project>
 surface_default: mobile        # one of: web | mobile | both | auto
 playwright: absent             # present | absent  (web design-ref rendering + web parity need Playwright)
-gate_strictness: standard      # low = 0 Crit/High/Med (Low+Info logged) | standard = also 0 Low (Info logged) | strict = also 0 Info (info-level lints). Toggle with /skl-gate
+gate_strictness: standard      # low = 0 Crit/High/Med (Low+Info logged) | standard = also 0 Low (Info logged) | strict = also 0 Info (info-level lints). Toggle with /skl-strictness
 
 ## Automated gate commands — Phase B step 10. Every listed command must exit 0.
 mobile_gates:

@@ -1,33 +1,41 @@
 # skl
 
 Portable Claude Code skills for **spec-driven, QA-gated, autonomous loops** — a one-time setup
-command plus two loops, sharing one QA-agent panel and one installer. Built on
+command and a human-gated ticket runner that builds each ticket through an auto-iterating 8-agent QA
+panel, sharing one installer. Built on
 [Spec Kit](https://github.com/github/spec-kit) and the
 [loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology — skl is an
 implementation of its five-building-blocks + memory framework (automations, worktrees, skills,
 plugins/MCP, sub-agents, durable state), with phased **L1→L2→L3** autonomy rollout, human safety
-gates, transparent cost budgeting, and readiness scoring baked into the loops and the constitution.
+gates, transparent cost budgeting, and readiness scoring baked into the loop and the constitution.
+
+## The flow
+
+skl is **human-gated and one ticket at a time** — it never drives itself across tickets and never
+merges for you:
+
+1. **Plan** — brainstorm a feature or debug an issue with
+   [Superpowers](https://github.com/obra/Superpowers) (`brainstorming` / `systematic-debugging`).
+2. **Capture** — file it as a ticket on **GitHub / GitLab** with **`/skl-ticket`**.
+3. **Human gate → run** — review the ticket, label it **`loop-ready`**, then run
+   **`/skl-do`**. It works that one ticket through the QA-gated build loop, opens a **PR**
+   (never merges), and **stops**. You review and **merge** the PR, then re-run `/skl-do`
+   for the next ticket.
 
 | Skill | Input | What it does |
 |-------|-------|--------------|
 | **`/skl-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
-| **`/skl-feature`** | a **feature** (text, or a **claude.ai/design** project for UI) | Loops until an 8-agent QA panel passes for the feature (max 10 iterations) |
-| **`/skl-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
-| **`/skl-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
-| **`/skl-create-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote) |
-| **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` / `--drain` / `--merge-on-green` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges it itself; `--merge-on-green` lets the provider merge it on green CI), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
-| **`/skl-next-step`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / plans / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
-| **`/skl-auto`** | (optional) `--promote[=N]` / `--alive` / `--no-merge` | The **hands-off driver** — triages (skl-next-step), then autonomously resumes stranded tickets, drains the `loop-ready` queue and batch-runs ready plans, opening PRs that **auto-merge into `dev` on green CI** (never main/master); `--promote` may promote up to N **trusted-author** tickets; human-only work goes to one deduped Telegram digest |
-| **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI); `--design` for design ideation first | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many. **`--design`** first brainstorms (Superpowers) a Claude Design prompt — design system + platforms + screens/states — then plans |
-| **`/skl-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the skl-feature QA loop, committing each on a review branch |
-| **`/skl-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
+| **`/skl-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Never applies a `loop-*` label — promoting to `loop-ready` is your decision |
+| **`/skl-do`** | (optional) **`#N`**; `--auto` | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
+| **`/skl-next`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
+| **`/skl-strictness`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
 | **`/skl-update`** | (none) | Pull the latest skl from GitHub and refresh this project's skills + agents (keeps your config) |
-| **`/skl-resume`** | (optional) reset time | Auto-continue a loop after Claude's usage limit resets — waits for the status-bar timer + 3 min, then resumes |
+| **`/skl-resume`** | (optional) reset time | Continue the last `/skl-do` run after an interruption — a usage-limit reset, a crash, or a context `/clear` — from its durable checkpoint |
 | **`/skl-help`** | (optional) command name | Lists every skl command + a one-line explanation and the workflow (reads the installed skills, so it's always current) |
 
-The build/refactor/fix loops chain the individual `speckit-*` skills (`specify → … → implement`), then
-gate the result with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings
-(and, per `/skl-gate`, also 0 Low and/or 0 Info). On failure, `skl-debugger` turns the findings into the
+The build loop chains the individual `speckit-*` skills (`specify → … → implement`), then gates the
+result with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings (and,
+per `/skl-strictness`, also 0 Low and/or 0 Info). On failure, `skl-debugger` turns the findings into the
 next iteration's plan.
 
 ## `/skl-init` — first-time setup (run this once)
@@ -35,7 +43,7 @@ next iteration's plan.
 ```
 /skl-init [optional tech-stack hint]
 ```
-Bootstraps a project for the loops. Installs the prerequisites (**Spec Kit** + the `speckit-*`
+Bootstraps a project for the loop. Installs the prerequisites (**Spec Kit** + the `speckit-*`
 skills, optional Playwright), verifies the QA panel, then authors the project's **constitution**:
 it asks your **tech stack**, **web-searches** the best-fit code organization (melos, clean
 architecture, feature-first, …) and lets you **choose**, then runs `speckit-constitution` to encode
@@ -43,182 +51,82 @@ architecture, feature-first, …) and lets you **choose**, then runs `speckit-co
 **Loop Engineering** principle (the [loop-engineering](https://github.com/cobusgreyling/loop-engineering)
 methodology — phased L1→L2→L3 autonomy, human safety gates, cost budgeting, readiness scoring).
 Idempotent — re-run anytime. (After a fresh Spec Kit init it stops once for a Claude Code reload,
-then resumes.) The constitution it writes is what `/skl-refactor` reads as its target.
+then resumes.) The constitution it writes is what the QA `skl-guideline-auditor` gate reads as its target.
 
-## `/skl-feature` — feature → shipped & QA-verified
-
-```
-/skl-feature <one-line intent>                              # text-only (any feature, UI or not)
-/skl-feature <claude-design project name or uuid> — <intent>   # design-driven (UI)
-```
-The design reference is **optional** — not every feature has a UI. Generates `spec.md` (speckit
-`specify` + `clarify`), **stops for your approval**, then runs
-`plan → tasks → analyze → checklist → implement → QA-gates`, looping until the 8-agent panel passes.
-With a design (design-driven mode) it also pulls it (read-only, via `DesignSync`), renders it as the
-visual spec, and verifies design **and animation** parity (keyframe + behavior checklist). Without one
-(text-only mode) it works straight from your description and skips all the visual/animation steps.
-
-> Building **several** features? Decouple planning from execution: queue specs with **`/skl-plan`**,
-> then batch-run them with **`/skl-run`** (below).
-
-## `/skl-plan` + `/skl-run` — queue specs, then batch-run them
-
-`/skl-feature` does one feature end-to-end. To plan a backlog and run it as a batch, split the two:
+## `/skl-ticket` — file a ticket on GitHub / GitLab / Jira
 
 ```
-/skl-plan <one-line intent>                                # text-only
-/skl-plan <claude-design project name or uuid> — <intent>  # design-driven (UI)
-/skl-plan --design <feature flow to design>                # brainstorm a Claude Design prompt first, then plan
-/skl-run [3 5 7 | all] [--auto]
-```
-
-- **`/skl-plan`** does only the planning half — optional design ingest → `specify` → `clarify`
-  (asking you questions) → an `skl-business-analyst` cross-check of the spec against the design
-  (design mode) or your intent + answers (text-only) — and writes a **numbered, ready-to-run** spec
-  (`Loop-Status: ready`). It
-  **never builds**. Run it as many times as you want to queue plans. Same optional-design behavior as
-  `/skl-feature` (design-driven or text-only).
-  - **`--design`** runs an upstream **design-ideation** step first: it asks whether your **design
-    system** already exists in claude.ai/design (and helps you define one step-by-step if not), which
-    **platforms** to design for (**mobile / tablet (iPad) / web** — some or all), and your **feature
-    flow**; then uses [Superpowers](https://github.com/obra/Superpowers) `brainstorming` to expand the
-    flow into screens / states / interactions, **writes a ready-to-paste Claude Design prompt**
-    (`.skl-design/<slug>/claude-design-prompt.md`), and continues into the plan. It writes a prompt — it
-    never writes to your Claude Design account. Pipeline: `/skl-plan --design` → paste prompt into
-    claude.ai/design → `/skl-run`. (Needs the Superpowers plugin.)
-- **`/skl-run`** lists every `ready` plan, asks which to run (**one / multiple / all**), then runs each
-  through the **same QA loop as `/skl-feature`** — committing each passing plan `feat(NNN)` on a
-  `skl-run/<stamp>` integration branch and moving to the next automatically. Never pushes or merges to
-  main/dev; you review the branch at the end. Plans you don't select stay `ready` for later. Add
-  **`--auto`** to skip the selection prompt and run all ready plans, fully unattended.
-
-It reuses skl-feature's QA pass-matrix + renderer (one source of truth), so the gate is identical.
-
-## `/skl-refactor` — codebase → cleaner codebase
-
-```
-/skl-refactor [optional scope: path / package / theme] [--auto]
-```
-Reads the **target organization from the constitution** (if the constitution is silent on code
-organization, it web-searches best practices, gets your sign-off, and seeds the constitution — the
-loop's one approval gate; **`--auto`** removes even that, auto-picking the best-practice organization),
-uses a `skl-refactoring-specialist` agent to audit the code into a prioritized **backlog**, then **autonomously**
-refactors each item through the speckit workflow, QA-gates it (behavior-preservation centric),
-commits it on a `skl-refactor/*` review branch, and **re-audits** until nothing Critical/High
-remains. Never pushes or merges to main/dev — you review the integration branch.
-
-## `/skl-fix` — fix bugs by root cause
-
-```
-/skl-fix <bug(s): symptom / repro / expected-vs-actual>     # free text
-/skl-fix https://github.com/OWNER/REPO/issues/123           # or a GitHub/GitLab issue URL
-```
-Bugs can be **plain text or a GitHub/GitLab issue URL** (incl. self-hosted GitLab). For a linked issue
-it fetches the title + body + comments via the `gh` / `glab` CLI using **your** access — and if access
-is missing it walks you through granting it, step by step (`resources/issue-access.md`). Then it
-diagnoses each bug's **root cause** with [Superpowers](https://github.com/obra/Superpowers)
-`systematic-debugging` (not the symptom), writes a prioritized **fix backlog**, then **autonomously**
-fixes each bug through the speckit workflow **test-first** (a failing reproduction test → the
-root-cause fix → green), QA-gates it, and **proves the symptom is gone** with Superpowers
-`verification-before-completion` (fresh evidence, full suite green — no regression). Commits each fix
-on a `skl-fix/*` review branch; never pushes or merges to main/dev. If the symptom still reproduces it
-**re-diagnoses** rather than re-patching. Requires the **Superpowers** plugin (see Prerequisites).
-
-## `/skl-create-ticket` — file a ticket on GitHub / GitLab / Jira
-
-```
-/skl-create-ticket <rough description>          # auto-detects the provider from the git remote
-/skl-create-ticket jira: <rough description>    # or name the provider explicitly
+/skl-ticket <rough description>          # auto-detects the provider from the git remote
+/skl-ticket jira: <rough description>    # or name the provider explicitly
 ```
 Turns a rough description into a well-structured ticket in the repo's house style, shows the full
 draft, and files it **only after you pick Create** (a Create / Edit / Cancel gate — the whole point).
 Auto-detects the provider from the git remote — **GitHub** (`gh`), **GitLab** (`glab`, incl.
 self-hosted), or **Jira** (Atlassian MCP) — asking only when it's unsure. It never applies a `loop-*`
-label: promoting an issue to **`loop-ready`** is a human decision (that queue is what `/skl-pickup-ticket`
-drains).
+label: promoting an issue to **`loop-ready`** is a human decision (that queue is what `/skl-do`
+works, one ticket at a time).
 
-## `/skl-pickup-ticket` — autonomously drain the `loop-ready` queue
+## `/skl-do` — work one `loop-ready` ticket into a PR
 
 ```
-/skl-pickup-ticket                 # loop the loop-ready queue, oldest first
-/skl-pickup-ticket #42             # work just issue #42, then stop
-/skl-pickup-ticket --auto --alive  # zero-prompt, poll forever
-/skl-pickup-ticket --auto --drain --merge-on-green   # driver mode (used by /skl-auto): exit when drained; PRs auto-merge on green CI
+/skl-do             # the OLDEST open loop-ready issue, then stop
+/skl-do #42         # work just issue #42, then stop
+/skl-do --auto      # zero-prompt build
 ```
-The autonomous **ticket runner**. With no number it pulls the **oldest open issue labeled
-`loop-ready`**, classifies it (bug → `/skl-fix`, feature → `/skl-feature`), **readiness-gates it** (an
-`skl-business-analyst` check — a ticket too vague to work autonomously is labeled
-`loop-needs-info` with a comment listing what's missing, instead of burning iterations), works it
-through that QA-gated loop (max 10 iterations), **opens a PR that `Closes` the issue** — pushing a `skl-pickup/*`
-branch; it **never merges** to main/dev itself (under `--merge-on-green` the **provider** merges the PR
-into `automerge_base` — default `dev` — once CI passes) — then picks up the next-oldest. When the queue is empty it
-**waits 30 min via `ScheduleWakeup` and re-polls**; after **3 empty polls it exits** (re-run to resume),
-unless **`--alive`**, which polls indefinitely. **`--auto`** runs zero-prompt (no spec-clarification
-questions). A ticket that can't converge in 10 iterations is relabeled **`loop-deferred`**, commented
-with the findings, and skipped — so the loop never re-picks it. An explicit **`#N`** works that one
-ticket (bypassing the label gate), opens its PR, and stops.
+The **ticket runner**. With no number it takes the **oldest open issue labeled `loop-ready`**; an
+explicit `#N` works that exact issue (bypassing the label gate). It classifies the ticket
+(bug → framed as a fix, feature → as-is), **readiness-gates it** (an `skl-business-analyst` check — a
+ticket too vague to work is labeled `loop-needs-info` with a comment listing what's missing, instead
+of burning build iterations), builds it through the QA-gated loop it owns (`speckit specify + clarify`
+→ a human spec-review gate → `plan → … → implement` → an 8-agent QA panel, max 10 iterations),
+**opens a PR that `Closes` the issue** — pushing a `skl-do/*` branch — and **stops**.
+It **never merges** and never auto-advances: you review and merge the PR, then re-run
+`/skl-do` for the next ticket. A ticket that can't converge in 10 iterations is relabeled
+**`loop-deferred`**, commented with the findings, and skipped.
 
-As it works, the loop drives a **label lifecycle** on the issue so you can see each ticket's state at a
+As it works, it drives a **label lifecycle** on the issue so you can see each ticket's state at a
 glance:
 
 ```
-loop-ready ──claim──▶ loop-in-progress ──PR opened──▶ loop-done      (stays open until you merge the PR)
+loop-ready ──claim──▶ loop-in-progress ──PR opened──▶ loop-done      (stays open until YOU merge the PR)
  (you set)            (loop working it)  ├──cap hit───▶ loop-deferred  (findings commented, skipped)
                                          └──not ready─▶ loop-needs-info (missing info commented; you re-label loop-ready)
 ```
 
 A human only ever sets **`loop-ready`**; the loop owns every transition after that. On start-up it
-**resumes** any ticket left on `loop-in-progress` by an interrupted / rate-limited run *before* claiming
-new `loop-ready` ones, so a crash never strands a ticket. (Missing labels are auto-created on first run.)
+**resumes** any ticket left on `loop-in-progress` by an interrupted / rate-limited run *before*
+claiming a new `loop-ready` one, so a crash never strands a ticket. (Missing labels are auto-created
+on first run.)
 
-> **The `loop-ready` queue is the human gate.** `/skl-pickup-ticket` only *starts* work on issues a human
-> has labeled `loop-ready` — it never applies that label itself (though it does drive the downstream
-> `loop-in-progress` / `loop-done` / `loop-deferred` / `loop-needs-info` transitions, and an interactive readiness-gate **Skip** re-queues at the human's direction). Curate the queue (label issues
-> `loop-ready`, optionally filed via `/skl-create-ticket`), then let the loop drain it into reviewable
-> PRs; you review + merge (`loop-done` = PR up, awaiting you). `/skl-resume` can continue a pickup loop
-> after a usage-limit reset. This is the loop-engineering human-gate + PR-not-merge posture in practice.
+> **The `loop-ready` queue is the human gate, and it stays one-ticket-at-a-time.**
+> `/skl-do` only *starts* work on an issue a human has labeled `loop-ready` — it never
+> applies that label itself — works exactly **one** ticket per run, and **never merges** or
+> auto-advances to the next. Curate the queue (label issues `loop-ready`, optionally filed via
+> `/skl-ticket`), then run it: one ticket → a reviewable PR → you merge → re-run for the next.
+> `/skl-resume` can continue a `/skl-do` build after any interruption — even a context `/clear`. This
+> is the loop-engineering human-gate + PR-not-merge posture in practice.
 
-## `/skl-next-step` — what should I do now?
+## `/skl-next` — what should I do now?
 
 ```
-/skl-next-step
+/skl-next
 ```
 The read-only **triage advisor**. Sweeps the project's skl state — issue `loop-*` labels, open
-`skl-pickup/*` PRs + unmerged review branches (`skl-run/*` / `skl-fix/*` / `skl-refactor/*`),
-`Loop-Status` plans, and setup/housekeeping drift — prints a **current-state snapshot** first,
-then ranks the findings on a fixed **unblock-first ladder**: setup blockers (`/skl-init`) →
+`skl-do/*` PRs awaiting merge, and setup/housekeeping drift — prints a **current-state snapshot**
+first, then ranks the findings on a fixed **unblock-first ladder**: setup blockers (`/skl-init`) →
 unblock the pipeline (stranded tickets, PRs awaiting merge, `loop-needs-info` answers, deferred
-rescues) → start new work (ready plans → `/skl-run`, `loop-ready` queue → `/skl-pickup-ticket`) →
-housekeeping (`/skl-update`, dirty tree). It names the single next step and **offers (human-gated)
-to run it** — the triage itself changes nothing: no labels, comments, branches, or writes.
-Collectors it can't run (no remote, CLI unauthenticated) are skipped with a reason.
+rescues) → start new work (`loop-ready` queue → `/skl-do`, or file one via
+`/skl-ticket`) → housekeeping (`/skl-update`, dirty tree). It names the single next step and
+**offers (human-gated) to run it** — the triage itself changes nothing: no labels, comments,
+branches, or writes. Collectors it can't run (no remote, CLI unauthenticated) are skipped with a reason.
 
-## `/skl-auto` — the hands-off driver
-
-```
-/skl-auto                       # triage, then do everything already authorized; auto-merge on green
-/skl-auto --promote=2 --alive   # + promote up to 2 trusted-author tickets; re-poll every 30 min
-/skl-auto --no-merge            # PRs stay open for human merge
-```
-Runs `/skl-next-step`'s triage, then **proceeds autonomously**: resumes stranded tickets and
-drains the `loop-ready` queue (`/skl-pickup-ticket --auto --drain`), batch-runs ready plans
-(`/skl-run --auto`), and opens PRs that **merge themselves into `dev` once CI passes** (the
-provider's merge-when-green — never main/master; skipped with a note when the repo has no
-required checks). Human-only work — PRs to review, `loop-needs-info` answers, `loop-deferred`
-rescues — is never attempted; it lands in **one deduped Telegram digest**. **`--promote[=N]`**
-(default OFF) is the one sanctioned, flag-gated exception to "a human only ever sets
-`loop-ready`": passing the flag is your standing authorization to promote up to N tickets from
-**trusted authors** (repo owner/member/collaborator) — the loop-engineering L3+ opt-in, each
-promotion Telegram-audited. Truly nothing to do → it says so and stops (`--alive` re-polls every
-30 min). Zero-prompt by design; the **dev → main promotion stays yours**.
-
-## `/skl-gate` — how strict the QA gates are
+## `/skl-strictness` — how strict the QA gates are
 
 ```
-/skl-gate [strict | standard | low]
+/skl-strictness [strict | standard | low]
 ```
-A 3-stop slider (like `/effort`) that sets the QA pass threshold both loops use. **Medium and above
-always block**; the mode decides how far below that also blocks, down the ladder
+A 3-stop slider (like `/effort`) that sets the QA pass threshold the build loop uses. **Medium and
+above always block**; the mode decides how far below that also blocks, down the ladder
 *Critical › High › Medium › Low › Info* (Info = info-level lint diagnostics):
 
 - **strict** — passes only at *0 Critical / High / Medium / Low / Info*; even info-level lints must be
@@ -228,34 +136,30 @@ always block**; the mode decides how far below that also blocks, down the ladder
 
 Writes `gate_strictness` into each skill's `project.config.md`; takes effect on the next loop run.
 
-## `/skl-resume` — auto-continue after a usage-limit reset
+## `/skl-resume` — continue the last run after an interruption
 
 ```
-/skl-resume [reset time from the status bar, e.g. 2h15m]
+/skl-resume [reset time from the status bar, e.g. 2h15m]   # only if a usage cap stopped it
 ```
-Long `/skl-feature` / `/skl-refactor` runs can hit Claude's 5-hour or weekly cap and stop mid-flight.
-When the rate-limit alert fires, run `/skl-resume`: it reads the reset time from the **status-bar
-timer**, waits until **reset + 3 min** (a safety buffer), then re-invokes the loop so it continues
-where it left off. The wait is in-session via `ScheduleWakeup` (re-arming hourly for multi-hour
-resets), so the same loop resumes in the same context — the loops pick up from their working files.
+A `/skl-do` run can stop mid-flight — a **usage cap**, a crash, or you **`/clear` the context**.
+Because `/skl-do` checkpoints its progress to `.skl-do/state.md` (and the `loop-in-progress` label is
+the durable signal), nothing is lost. `/skl-resume` reads that durable state, works out which ticket
+and which phase/iteration it stopped at, and **re-invokes `/skl-do` to continue the same ticket** — so
+you can clear the context and just run `/skl-resume`. If a **usage cap** stopped it, it waits until the
+status-bar reset **+ 3 min** (in-session via `ScheduleWakeup`, re-arming hourly) before continuing;
+otherwise it continues immediately.
 
 ## What's in here
 
 ```
-agents/               # 11 subagents — 8 QA gate agents + skl-debugger (failure-time) + skl-business-analyst (skl-feature/plan/pickup) + skl-refactoring-specialist (skl-refactor)
+agents/               # 10 subagents — 8 QA gate agents + skl-debugger (failure-time) + skl-business-analyst (skl-do Phase A + readiness gate)
 skills/skl-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
-skills/skl-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
+skills/skl-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
+skills/skl-do/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check + issue-access + pass-matrix + render-keyframes.mjs + mobile-render + no-overflow-testing + templates + config example) — build one loop-ready ticket → PR, then stop
+skills/skl-next/  # SKILL.md — read-only triage advisor: current-state snapshot → unblock-first next step + offer
+skills/skl-strictness/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
 skills/skl-update/   # SKILL.md — pull latest from GitHub + re-install (keeps project.config.md)
-skills/skl-resume/   # SKILL.md — auto-continue a loop after a usage-limit reset
-skills/skl-feature/  # SKILL.md + resources/ (pass-matrix, render-keyframes.mjs [web-only], mobile-render + no-overflow-testing [mobile], templates, config example)
-skills/skl-refactor/ # SKILL.md + resources/ (organization + backlog + pass-matrix + remediation templates)
-skills/skl-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + remediation templates)
-skills/skl-create-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
-skills/skl-pickup-ticket/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check) — autonomous loop-ready → PR runner
-skills/skl-next-step/  # SKILL.md — read-only triage advisor: current-state snapshot → unblock-first next step + offer
-skills/skl-auto/     # SKILL.md + resources/ (state template + promotion rules) — hands-off driver: triage → run authorized → promote (flag) → merge-on-green
-skills/skl-plan/     # SKILL.md + resources/ (design-system checklist + Claude Design prompt template, for --design) — plan only (specify + clarify), queue ready-to-run plans
-skills/skl-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses skl-feature's gate)
+skills/skl-resume/   # SKILL.md — continue the last run from its checkpoint (usage cap / crash / /clear)
 skills/skl-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
 ```
 
@@ -266,10 +170,9 @@ The 8 gate agents — `skl-spec-auditor` (spec + task completion), `skl-guidelin
 (CLAUDE.md + constitution), `skl-pragmatist` (simplicity), `skl-reality-checker` (runs it),
 `skl-code-reviewer` (adversarial bug hunt), `skl-security-auditor` (security pass),
 `skl-test-integrity-auditor` (test/gate tampering), `skl-ui-tester` (UI + design/animation parity) —
-plus `skl-debugger` (the failure-time fixer), `skl-business-analyst` (used in `/skl-feature` +
-`/skl-plan` Phase A of **both modes** to cross-check the spec against its source — the rendered
-design when there is one, the intent + clarify answers text-only — plus the `/skl-pickup-ticket` readiness gate), and `skl-refactoring-specialist`
-(used in `/skl-refactor` to audit smells and perform behavior-preserving refactors).
+plus `skl-debugger` (the failure-time fixer) and `skl-business-analyst` (used in `/skl-do` Phase A of
+**both modes** to cross-check the spec against its source — the rendered design when there is one, the
+intent + clarify answers text-only — plus the `/skl-do` readiness gate).
 
 ## Prerequisites (on the target project)
 
@@ -279,20 +182,20 @@ design when there is one, the intent + clarify answers text-only — plus the `/
   capability a skl project ships: the phased **L1 (report-only) → L2 (assisted) → L3 (unattended)**
   rollout, explicit human safety gates + denylists, transparent cost/token budgeting with a stop rule,
   and a measurable readiness score gating promotion to a higher autonomy level. `/skl-init` encodes
-  these as a **Loop Engineering** principle in the constitution and every loop's QA compliance gate
-  enforces it.
-- **Spec Kit** — `.specify/` + the `speckit-*` skills. The loops orchestrate these.
+  these as a **Loop Engineering** principle in the constitution and the QA compliance gate enforces it.
+- **Spec Kit** — `.specify/` + the `speckit-*` skills. The loop orchestrates these.
   `/skl-init` installs this for you; or init by hand with
   `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
-- **Superpowers** *(skl-fix + skl-plan --design)* — the [obra/Superpowers](https://github.com/obra/Superpowers)
-  plugin: `skl-fix` uses `systematic-debugging` + `verification-before-completion`, `skl-plan --design`
-  uses `brainstorming`. Install in Claude Code: `/plugin marketplace add obra/superpowers-marketplace` then
+- **Superpowers** *(recommended — for the planning step)* — the [obra/Superpowers](https://github.com/obra/Superpowers)
+  plugin powers **step 1** of the flow: `brainstorming` to shape a feature, `systematic-debugging` to
+  diagnose a bug, **before** you file it as a ticket. No skl skill invokes it directly — it's the
+  human's planning aid. Install in Claude Code: `/plugin marketplace add obra/superpowers-marketplace` then
   `/plugin install superpowers@superpowers-marketplace` (or `…@claude-plugins-official`), then reload.
   `/skl-init` checks for it.
-- **Design access** *(design-driven skl-feature only)* — the `DesignSync` tool / claude.ai login
-  (`/design-login`). Not needed for text-only features.
-- **Playwright** *(design-driven skl-feature, web surfaces only)* — for rendering the design reference
-  + web parity. Mobile / refactor / text-only work doesn't need it.
+- **Design access** *(design-driven tickets only)* — the `DesignSync` tool / claude.ai login
+  (`/design-login`), when a ticket names a claude.ai/design reference. Not needed for text-only tickets.
+- **Playwright** *(design-driven web tickets only)* — for rendering the design reference
+  + web parity. Mobile / text-only work doesn't need it.
 
 ## Install
 
@@ -315,10 +218,9 @@ on first run.
 
 Then:
 
-1. **Reload Claude Code** so the skills (`/skl-init`, `/skl-feature`, `/skl-refactor`, `/skl-fix`,
-   `/skl-plan`, `/skl-run`, `/skl-gate`, `/skl-update`, `/skl-resume`, `/skl-help`) and the agents
-   register.
-2. **Install the Superpowers plugin** (needed by `/skl-fix` + `/skl-plan --design`) — in Claude Code:
+1. **Reload Claude Code** so the skills (`/skl-init`, `/skl-ticket`, `/skl-do`, `/skl-next`,
+   `/skl-strictness`, `/skl-update`, `/skl-resume`, `/skl-help`) and the agents register.
+2. **Install the Superpowers plugin** (recommended — for the planning step) — in Claude Code:
    ```
    /plugin marketplace add obra/superpowers-marketplace
    /plugin install superpowers@superpowers-marketplace
@@ -332,7 +234,7 @@ Then:
 `/skl-init` generates `resources/project.config.md` into **each** skill (auto-detecting the surface
 web / mobile / both and the gate commands: Makefile targets → melos → flutter / npm). The skills read
 it at runtime for `surface_default`, the `mobile_gates` / `web_gates` commands, `web_dev_server`, and
-`gate_strictness` (set by `/skl-gate`). Edit by hand anytime — `/skl-init` and `/skl-update` never
+`gate_strictness` (set by `/skl-strictness`). Edit by hand anytime — `/skl-init` and `/skl-update` never
 overwrite an existing `project.config.md`.
 
 ## Updating
