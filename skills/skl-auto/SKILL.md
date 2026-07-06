@@ -135,7 +135,8 @@ Classify every ranked finding:
    ticket, each merging itself on green when enabled — then exits `State: exited(drained)` and
    control returns here.
 4. **Plans:** invoke (Skill tool) `/skl-run --auto`. When it returns with ≥ 1 shipped plan:
-   `git push -u origin skl-run/<stamp>`, then open a PR to `automerge_base` — title
+   `git push -u origin skl-run/<stamp>`, then open a PR to `automerge_base` (merge **off** → to
+   `pr_base_branch` instead, matching pickup's fallback) — title
    `feat: skl-run batch <stamp> (<N> plans)`, body = the per-plan results from
    `.skl-run/report.md` (write it to a scratch temp file first) — and, when merge is on, enable
    merge-when-green (same commands as pickup's, in
