@@ -16,7 +16,7 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | **`/skl-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
 | **`/skl-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
 | **`/skl-create-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote) |
-| **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
+| **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` / `--drain` / `--merge-on-green` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges it itself; `--merge-on-green` lets the provider merge it on green CI), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
 | **`/skl-next-step`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / plans / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
 | **`/skl-auto`** | (optional) `--promote[=N]` / `--alive` / `--no-merge` | The **hands-off driver** — triages (skl-next-step), then autonomously resumes stranded tickets, drains the `loop-ready` queue and batch-runs ready plans, opening PRs that **auto-merge into `dev` on green CI** (never main/master); `--promote` may promote up to N **trusted-author** tickets; human-only work goes to one deduped Telegram digest |
 | **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
@@ -155,7 +155,8 @@ The autonomous **ticket runner**. With no number it pulls the **oldest open issu
 `skl-business-analyst` check — a ticket too vague to work autonomously is labeled
 `loop-needs-info` with a comment listing what's missing, instead of burning iterations), works it
 through that QA-gated loop (max 10 iterations), **opens a PR that `Closes` the issue** — pushing a `skl-pickup/*`
-branch; it **never merges** to main/dev — then picks up the next-oldest. When the queue is empty it
+branch; it **never merges** to main/dev itself (under `--merge-on-green` the **provider** merges the PR
+into `automerge_base` — default `dev` — once CI passes) — then picks up the next-oldest. When the queue is empty it
 **waits 30 min via `ScheduleWakeup` and re-polls**; after **3 empty polls it exits** (re-run to resume),
 unless **`--alive`**, which polls indefinitely. **`--auto`** runs zero-prompt (no spec-clarification
 questions). A ticket that can't converge in 10 iterations is relabeled **`loop-deferred`**, commented

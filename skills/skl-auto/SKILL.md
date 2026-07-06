@@ -63,7 +63,10 @@ explicit loop-engineering **L3+ opt-ins**.
 
 1. **Config + provider.** Read the config above; resolve provider/host/auth per
    `.claude/skills/skl-pickup-ticket/resources/pickup-loop.md`. Auth failure → Telegram + STOP.
-2. **Clean tree.** `git status --porcelain` must be empty → else fire
+2. **Clean tree.** First, locally exclude the loop working dirs (idempotent — keeps the driver's
+   own state files out of `git status` and out of skl-run's `git add -A`):
+   `for p in .skl-auto/ .skl-pickup/ .skl-run/; do grep -qxF "$p" .git/info/exclude 2>/dev/null || echo "$p" >> .git/info/exclude; done`
+   Then `git status --porcelain -uno` (tracked changes only) must be empty → else fire
    `bash ~/.claude/notify-telegram.sh "[<project>] /skl-auto ⛔ dirty working tree — commit/stash, then re-run"`
    and **STOP** (even under `--alive`: a 30-min nag loop about a dirty tree is spam).
 3. **Starting branch.** Record `git branch --show-current` in the state file; every sub-skill
@@ -75,9 +78,10 @@ explicit loop-engineering **L3+ opt-ins**.
      an error).
    - GitHub: `gh api repos/{owner}/{repo} --jq .allow_auto_merge` is `true` AND required checks
      exist on the base (`gh api repos/{owner}/{repo}/branches/<base>/protection/required_status_checks`
-     — HTTP 404/403 → treat as **no checks**; zero required checks would merge instantly, i.e. on
-     the QA panel alone) → else merge **off(<reason>)**.
-   - GitLab: `glab api projects/:id --jq .only_allow_merge_if_pipeline_succeeds` is `true`, or
+     — HTTP 404/403 → treat as **no checks**, recording the status in the `off(<reason>)` note;
+     zero required checks would merge instantly, i.e. on the QA panel alone) → else merge
+     **off(<reason>)**.
+   - GitLab: `glab api projects/:id | jq -r .only_allow_merge_if_pipeline_succeeds` is `true`, or
      `glab api "projects/:id/pipelines?per_page=1"` is non-empty → else merge **off(<reason>)**.
    - Record `Merge-on-green: on | off(<reason>)` in the state file. When **on**, Phase 2/3 pass
      `--merge-on-green` to pickup and enable merge-when-green on driver-opened PRs; when **off**,
@@ -88,9 +92,10 @@ explicit loop-engineering **L3+ opt-ins**.
    - `.skl-auto/state.md` shows `State: running` with `Phase: executing(pickup)` or
      `promoting(#<n>)` → an interrupted run → this entry IS the resume: invoke
      `/skl-pickup-ticket --auto --drain` (+ `--merge-on-green` if merge is on) — its resume tier
-     re-picks the in-flight ticket — then continue this cycle from Phase 2. For
-     `Phase: executing(run)` → re-invoke `/skl-run --auto` (it resumes `running` plans), then
-     continue.
+     re-picks the in-flight ticket — then run Phase 1's triage and continue from Phase 2 (triage
+     is read-only and cheap; the resume must not skip it — Phases 2–4 consume its findings). For
+     `Phase: executing(run)` → re-invoke `/skl-run --auto` (it resumes `running` plans), then do
+     the same.
    - Otherwise, `.skl-pickup/state.md` live (`State: running`, or `waiting(<t>)` with `<t>`
      future) → **not ours** → report: *"another pickup loop appears active; if none is, run
      `/skl-pickup-ticket --auto --drain` to resume/clear it, or edit its `State:` line to
