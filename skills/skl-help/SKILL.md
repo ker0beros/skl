@@ -47,6 +47,7 @@ rather than a hard-coded list.
    - **Plan & batch** — `skl-plan` (queue specs) · `skl-run` (run one/multiple/all)
    - **Maintain** — `skl-refactor` (toward the constitution) · `skl-fix` (root-cause bug fixes)
    - **Controls** — `skl-gate` (QA strictness)
+   - **Autonomous** — `skl-pickup-ticket` (drain the loop-ready queue) · `skl-auto` (triage → run authorized work → optional promote; auto-merge on green)
    - **Ops** — `skl-update` (pull latest) · `skl-resume` (continue after a usage-limit reset)
    - **Help** — `skl-help` · `skl-next-step` (what should I do now?)
 
@@ -56,7 +57,8 @@ rather than a hard-coded list.
    > ×N to queue specs then `skl-run` to batch them. Use `skl-refactor` / `skl-fix` on existing
    > code, `skl-gate` to set strictness, `skl-resume` if a usage limit interrupts a long run, and
    > `skl-update` to pull the latest. Not sure what's next? `skl-next-step` triages your
-   > issues / PRs / plans into one recommended step.
+   > issues / PRs / plans into one recommended step. Fully hands-off? `skl-auto` runs everything
+   > already authorized (add `--promote` / `--alive` / `--no-merge` to tune its autonomy).
    >
    > **Notes:** per-project config (surface, gate commands, `gate_strictness`) lives in each skill's
    > `resources/project.config.md`. `skl-feature` / `skl-plan` take an **optional** claude.ai/design
