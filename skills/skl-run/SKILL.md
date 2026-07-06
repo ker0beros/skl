@@ -21,7 +21,8 @@ If the input names **plan numbers** (e.g. `3 5 7`) or `all`, run those without p
 (empty / unclear) show the interactive picker.
 
 **`--auto`** — fully autonomous: **don't ask anything.** `--auto` alone runs **all** ready plans (the
-best default); `--auto 3 5` runs just those. With `--auto`, never show the selection picker and never
+best default) — plus any `running` (resumable) plans left by an interrupted run, oldest first,
+before the ready ones; `--auto 3 5` runs just those. With `--auto`, never show the selection picker and never
 fire the await-input ping. (Strip `--auto` from the argument before reading plan numbers.)
 
 ---
@@ -53,8 +54,8 @@ project's **constitution** + `CLAUDE.md`. The QA gate is **identical** to skl-fe
    (design vs text-only), and the one-line intent. If **none are ready**, tell the user to create plans
    with `/skl-plan` and **stop**.
 3. **Select.**
-   - **`--auto`** → skip the question entirely: run **all** ready plans (or the plan numbers given
-     alongside `--auto`). No picker, no await ping.
+   - **`--auto`** → skip the question entirely: run any `running` (resumable) plans first, then
+     **all** ready plans (or just the plan numbers given alongside `--auto`). No picker, no await ping.
    - Else if `$ARGUMENTS` named plan numbers or `all` → use that selection.
    - Otherwise: fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-run awaiting plan selection"`,
      then `AskUserQuestion` (**multiSelect: true**) listing each ready plan (`NNN · slug · intent`) plus

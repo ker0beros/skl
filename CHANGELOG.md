@@ -19,6 +19,8 @@ on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the ru
   no ping) and **`--merge-on-green`** (PR targets `automerge_base`, default `dev`, and merges
   itself once CI passes; new config keys `automerge_base` / `automerge_method`).
 - skl-resume: resumes `/skl-auto` first when `.skl-auto/state.md` shows an interrupted run.
+- skl-run: `--auto` now also resumes `running` plans (left by an interrupted run) before the
+  ready ones.
 - skl-help: new **Autonomous** group (`skl-pickup-ticket` · `skl-auto`).
 
 ## 1.4.0 — 2026-07-05

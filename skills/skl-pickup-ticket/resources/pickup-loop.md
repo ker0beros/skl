@@ -4,7 +4,8 @@
 > **claiming** a ticket (`loop-ready` → `loop-in-progress`), **opening the PR/MR** + marking it
 > `loop-done`, **deferring** (`loop-in-progress` → `loop-deferred`) with a findings comment, **routing to needs-info** (`loop-in-progress` → `loop-needs-info`) with a request-info comment, and the
 > **wait** between polls. SKILL.md sequences these; this file is the source of truth for the commands.
-> Reuse `skl-fix/resources/issue-access.md` if a fetch hits an auth wall. Never merge; never apply
+> Reuse `skl-fix/resources/issue-access.md` if a fetch hits an auth wall. Never merge directly (under
+> `--merge-on-green`, only the provider's CI-gated auto-merge — commands below); never apply
 > `loop-ready` yourself (a human curates that queue; restoring it on an interactive readiness-gate
 > **Skip** is that human's decision, relayed) — but the loop *does* drive every later transition.
 
