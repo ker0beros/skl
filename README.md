@@ -18,6 +18,7 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | **`/skl-create-ticket`** | a **rough issue** to file | Drafts a structured ticket in the repo's house style, then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote) |
 | **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
 | **`/skl-next-step`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / plans / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
+| **`/skl-auto`** | (optional) `--promote[=N]` / `--alive` / `--no-merge` | The **hands-off driver** — triages (skl-next-step), then autonomously resumes stranded tickets, drains the `loop-ready` queue and batch-runs ready plans, opening PRs that **auto-merge into `dev` on green CI** (never main/master); `--promote` may promote up to N **trusted-author** tickets; human-only work goes to one deduped Telegram digest |
 | **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
 | **`/skl-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the skl-feature QA loop, committing each on a review branch |
 | **`/skl-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
@@ -147,6 +148,7 @@ drains).
 /skl-pickup-ticket                 # loop the loop-ready queue, oldest first
 /skl-pickup-ticket #42             # work just issue #42, then stop
 /skl-pickup-ticket --auto --alive  # zero-prompt, poll forever
+/skl-pickup-ticket --auto --drain --merge-on-green   # driver mode (used by /skl-auto): exit when drained; PRs auto-merge on green CI
 ```
 The autonomous **ticket runner**. With no number it pulls the **oldest open issue labeled
 `loop-ready`**, classifies it (bug → `/skl-fix`, feature → `/skl-feature`), **readiness-gates it** (an
@@ -195,6 +197,25 @@ housekeeping (`/skl-update`, dirty tree). It names the single next step and **of
 to run it** — the triage itself changes nothing: no labels, comments, branches, or writes.
 Collectors it can't run (no remote, CLI unauthenticated) are skipped with a reason.
 
+## `/skl-auto` — the hands-off driver
+
+```
+/skl-auto                       # triage, then do everything already authorized; auto-merge on green
+/skl-auto --promote=2 --alive   # + promote up to 2 trusted-author tickets; re-poll every 30 min
+/skl-auto --no-merge            # PRs stay open for human merge
+```
+Runs `/skl-next-step`'s triage, then **proceeds autonomously**: resumes stranded tickets and
+drains the `loop-ready` queue (`/skl-pickup-ticket --auto --drain`), batch-runs ready plans
+(`/skl-run --auto`), and opens PRs that **merge themselves into `dev` once CI passes** (the
+provider's merge-when-green — never main/master; skipped with a note when the repo has no
+required checks). Human-only work — PRs to review, `loop-needs-info` answers, `loop-deferred`
+rescues — is never attempted; it lands in **one deduped Telegram digest**. **`--promote[=N]`**
+(default OFF) is the one sanctioned, flag-gated exception to "a human only ever sets
+`loop-ready`": passing the flag is your standing authorization to promote up to N tickets from
+**trusted authors** (repo owner/member/collaborator) — the loop-engineering L3+ opt-in, each
+promotion Telegram-audited. Truly nothing to do → it says so and stops (`--alive` re-polls every
+30 min). Zero-prompt by design; the **dev → main promotion stays yours**.
+
 ## `/skl-gate` — how strict the QA gates are
 
 ```
@@ -237,6 +258,7 @@ skills/skl-fix/      # SKILL.md + resources/ (fix backlog + fix pass-matrix + re
 skills/skl-create-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
 skills/skl-pickup-ticket/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check) — autonomous loop-ready → PR runner
 skills/skl-next-step/  # SKILL.md — read-only triage advisor: current-state snapshot → unblock-first next step + offer
+skills/skl-auto/     # SKILL.md + resources/ (state template + promotion rules) — hands-off driver: triage → run authorized → promote (flag) → merge-on-green
 skills/skl-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans
 skills/skl-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses skl-feature's gate)
 skills/skl-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
