@@ -79,7 +79,7 @@ explicit loop-engineering **L3+ opt-ins**.
      the QA panel alone) → else merge **off(<reason>)**.
    - GitLab: `glab api projects/:id --jq .only_allow_merge_if_pipeline_succeeds` is `true`, or
      `glab api "projects/:id/pipelines?per_page=1"` is non-empty → else merge **off(<reason>)**.
-   - Record `merge_on_green: on | off(<reason>)` in the state file. When **on**, Phase 2/3 pass
+   - Record `Merge-on-green: on | off(<reason>)` in the state file. When **on**, Phase 2/3 pass
      `--merge-on-green` to pickup and enable merge-when-green on driver-opened PRs; when **off**,
      PRs open normally for human merge and the reason joins the digest.
 6. **Single-flight guard** (ownership-aware, in this order):
@@ -174,7 +174,7 @@ Repeat while slots AND candidates remain:
 
 ## Phase 4 — Digest, report, idle
 
-1. **Digest items:** every human-only + report-only finding, plus `merge_on_green: off(<reason>)`
+1. **Digest items:** every human-only + report-only finding, plus `Merge-on-green: off(<reason>)`
    when auto-merge was disabled, plus the "unlabeled issues need human curation" note when
    applicable. Idle (nothing ran, nothing promoted, no items) is itself the digest `(idle)`.
 2. **Dedupe:** fingerprint = the sorted item ids (e.g. `PR#31,issue#17,plan-005,update-1.5.0`, or
