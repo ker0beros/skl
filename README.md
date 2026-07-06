@@ -11,7 +11,6 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | Skill | Input | What it does |
 |-------|-------|--------------|
 | **`/skl-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
-| **`/skl-design`** | a **feature flow** to design | Brainstorms (Superpowers) a Claude Design prompt — design system + platforms (mobile/tablet/web) + screens/states — then auto-writes the plan |
 | **`/skl-feature`** | a **feature** (text, or a **claude.ai/design** project for UI) | Loops until an 8-agent QA panel passes for the feature (max 10 iterations) |
 | **`/skl-refactor`** | the **codebase itself** | Loops until a re-audit finds no Critical/High refactors left and all gates are green |
 | **`/skl-fix`** | **bug(s)** — text or a **GitHub/GitLab issue URL** | Fetches linked issues (with your access), diagnoses each bug's root cause (Superpowers), fixes it test-first through the speckit loop, QA-gates + verifies the symptom is gone, loops until fixed-or-deferred |
@@ -19,7 +18,7 @@ gates, transparent cost budgeting, and readiness scoring baked into the loops an
 | **`/skl-pickup-ticket`** | (optional) **`#N`**; `--auto` / `--alive` / `--drain` / `--merge-on-green` | Drains the **`loop-ready`** issue queue oldest-first — routes each to `/skl-fix` or `/skl-feature`, QA-gates it, **opens a PR** (never merges it itself; `--merge-on-green` lets the provider merge it on green CI), then the next; empty queue → polls every 30 min, exits after 3 empty (`--alive` = forever). `#N` = one ticket then stop. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
 | **`/skl-next-step`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / plans / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
 | **`/skl-auto`** | (optional) `--promote[=N]` / `--alive` / `--no-merge` | The **hands-off driver** — triages (skl-next-step), then autonomously resumes stranded tickets, drains the `loop-ready` queue and batch-runs ready plans, opening PRs that **auto-merge into `dev` on green CI** (never main/master); `--promote` may promote up to N **trusted-author** tickets; human-only work goes to one deduped Telegram digest |
-| **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI) | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many |
+| **`/skl-plan`** | a **feature** (text, or a **claude.ai/design** project for UI); `--design` for design ideation first | Plans only — specify + clarify (asking you questions) → a numbered, ready-to-run plan. Run it repeatedly to queue many. **`--design`** first brainstorms (Superpowers) a Claude Design prompt — design system + platforms + screens/states — then plans |
 | **`/skl-run`** | (optional) plan numbers / `all` | Lists ready plans, you pick one/multiple/all, then batch-runs each through the skl-feature QA loop, committing each on a review branch |
 | **`/skl-gate`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
 | **`/skl-update`** | (none) | Pull the latest skl from GitHub and refresh this project's skills + agents (keeps your config) |
@@ -46,19 +45,6 @@ methodology — phased L1→L2→L3 autonomy, human safety gates, cost budgeting
 Idempotent — re-run anytime. (After a fresh Spec Kit init it stops once for a Claude Code reload,
 then resumes.) The constitution it writes is what `/skl-refactor` reads as its target.
 
-## `/skl-design` — brainstorm a Claude Design prompt, then plan
-
-```
-/skl-design [feature flow to design]
-```
-Upstream design ideation. Asks whether your **design system** already exists in claude.ai/design (and
-helps you define one step-by-step if not), which **platforms** to design for (**mobile / tablet (iPad) /
-web** — some or all), and your **feature flow**; then uses [Superpowers](https://github.com/obra/Superpowers)
-`brainstorming` to expand the flow into screens / states / interactions and **writes a ready-to-paste
-Claude Design prompt** (`.skl-design/<slug>/claude-design-prompt.md`). Finally it **auto-chains into
-`/skl-plan`** to create the numbered, ready-to-run spec. It writes a prompt — it never writes to your
-Claude Design account. Pipeline: `/skl-design` → paste prompt into claude.ai/design → `/skl-run`.
-
 ## `/skl-feature` — feature → shipped & QA-verified
 
 ```
@@ -82,6 +68,7 @@ visual spec, and verifies design **and animation** parity (keyframe + behavior c
 ```
 /skl-plan <one-line intent>                                # text-only
 /skl-plan <claude-design project name or uuid> — <intent>  # design-driven (UI)
+/skl-plan --design <feature flow to design>                # brainstorm a Claude Design prompt first, then plan
 /skl-run [3 5 7 | all] [--auto]
 ```
 
@@ -91,6 +78,14 @@ visual spec, and verifies design **and animation** parity (keyframe + behavior c
   (`Loop-Status: ready`). It
   **never builds**. Run it as many times as you want to queue plans. Same optional-design behavior as
   `/skl-feature` (design-driven or text-only).
+  - **`--design`** runs an upstream **design-ideation** step first: it asks whether your **design
+    system** already exists in claude.ai/design (and helps you define one step-by-step if not), which
+    **platforms** to design for (**mobile / tablet (iPad) / web** — some or all), and your **feature
+    flow**; then uses [Superpowers](https://github.com/obra/Superpowers) `brainstorming` to expand the
+    flow into screens / states / interactions, **writes a ready-to-paste Claude Design prompt**
+    (`.skl-design/<slug>/claude-design-prompt.md`), and continues into the plan. It writes a prompt — it
+    never writes to your Claude Design account. Pipeline: `/skl-plan --design` → paste prompt into
+    claude.ai/design → `/skl-run`. (Needs the Superpowers plugin.)
 - **`/skl-run`** lists every `ready` plan, asks which to run (**one / multiple / all**), then runs each
   through the **same QA loop as `/skl-feature`** — committing each passing plan `feat(NNN)` on a
   `skl-run/<stamp>` integration branch and moving to the next automatically. Never pushes or merges to
@@ -249,7 +244,6 @@ resets), so the same loop resumes in the same context — the loops pick up from
 ```
 agents/               # 11 subagents — 8 QA gate agents + skl-debugger (failure-time) + skl-business-analyst (skl-feature/plan/pickup) + skl-refactoring-specialist (skl-refactor)
 skills/skl-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
-skills/skl-design/   # SKILL.md + resources/ (design-system checklist + Claude Design prompt template)
 skills/skl-gate/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
 skills/skl-update/   # SKILL.md — pull latest from GitHub + re-install (keeps project.config.md)
 skills/skl-resume/   # SKILL.md — auto-continue a loop after a usage-limit reset
@@ -260,7 +254,7 @@ skills/skl-create-ticket/  # SKILL.md + resources/ (providers) — file a ticket
 skills/skl-pickup-ticket/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check) — autonomous loop-ready → PR runner
 skills/skl-next-step/  # SKILL.md — read-only triage advisor: current-state snapshot → unblock-first next step + offer
 skills/skl-auto/     # SKILL.md + resources/ (state template + promotion rules) — hands-off driver: triage → run authorized → promote (flag) → merge-on-green
-skills/skl-plan/     # SKILL.md — plan only (specify + clarify), queue ready-to-run plans
+skills/skl-plan/     # SKILL.md + resources/ (design-system checklist + Claude Design prompt template, for --design) — plan only (specify + clarify), queue ready-to-run plans
 skills/skl-run/      # SKILL.md + resources/ (run-report) — batch-run ready plans (reuses skl-feature's gate)
 skills/skl-help/     # SKILL.md — lists all commands + the workflow (reads installed skills)
 ```
@@ -290,9 +284,9 @@ design when there is one, the intent + clarify answers text-only — plus the `/
 - **Spec Kit** — `.specify/` + the `speckit-*` skills. The loops orchestrate these.
   `/skl-init` installs this for you; or init by hand with
   `uvx --from git+https://github.com/github/spec-kit.git specify init --here`
-- **Superpowers** *(skl-fix + skl-design)* — the [obra/Superpowers](https://github.com/obra/Superpowers)
-  plugin: `skl-fix` uses `systematic-debugging` + `verification-before-completion`, `skl-design` uses
-  `brainstorming`. Install in Claude Code: `/plugin marketplace add obra/superpowers-marketplace` then
+- **Superpowers** *(skl-fix + skl-plan --design)* — the [obra/Superpowers](https://github.com/obra/Superpowers)
+  plugin: `skl-fix` uses `systematic-debugging` + `verification-before-completion`, `skl-plan --design`
+  uses `brainstorming`. Install in Claude Code: `/plugin marketplace add obra/superpowers-marketplace` then
   `/plugin install superpowers@superpowers-marketplace` (or `…@claude-plugins-official`), then reload.
   `/skl-init` checks for it.
 - **Design access** *(design-driven skl-feature only)* — the `DesignSync` tool / claude.ai login
@@ -322,9 +316,9 @@ on first run.
 Then:
 
 1. **Reload Claude Code** so the skills (`/skl-init`, `/skl-feature`, `/skl-refactor`, `/skl-fix`,
-   `/skl-plan`, `/skl-run`, `/skl-design`, `/skl-gate`, `/skl-update`, `/skl-resume`,
-   `/skl-help`) and the agents register.
-2. **Install the Superpowers plugin** (needed by `/skl-fix` + `/skl-design`) — in Claude Code:
+   `/skl-plan`, `/skl-run`, `/skl-gate`, `/skl-update`, `/skl-resume`, `/skl-help`) and the agents
+   register.
+2. **Install the Superpowers plugin** (needed by `/skl-fix` + `/skl-plan --design`) — in Claude Code:
    ```
    /plugin marketplace add obra/superpowers-marketplace
    /plugin install superpowers@superpowers-marketplace

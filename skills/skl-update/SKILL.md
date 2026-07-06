@@ -5,7 +5,7 @@ argument-hint: "(none) — updates the current project from origin/main"
 compatibility: "Uses your existing git/GitHub auth to reach the private ker0beros/skl repo (gh CLI for the first clone, git fetch thereafter). Syncs the skill + agent files directly and preserves project.config.md. Needs git + gh."
 metadata:
   author: "khairul"
-  version: "1.2.0"
+  version: "1.3.0"
   source: "skills/skl-update"
 user-invocable: true
 disable-model-invocation: true
@@ -66,6 +66,23 @@ It does **not** touch Spec Kit / the `speckit-*` skills, your
      (never overwrite it). New skills in `main` are added; existing ones are overwritten to match `main`.
      Per skill, e.g.: `rsync -a --exclude=project.config.md "$d"/ ".claude/skills/$(basename "$d")/"`
      (or copy each file except `project.config.md`).
+   - **Prune `skl-*` skills removed from `main`.** After copying, remove any `.claude/skills/skl-*/`
+     dir that no longer exists upstream, so a skill deleted from `main` (e.g. a consolidated command)
+     also disappears here — this is what makes the "exact match to `main`" guarantee below true.
+     **Guard against wiping everything:** prune only when the cache actually lists at least one skill,
+     and only within the **`skl-*`** namespace (never `speckit-*` or any other skills):
+     ```bash
+     cache_skls=$(ls -d ~/.skl/skills/skl-*/ 2>/dev/null | xargs -n1 basename 2>/dev/null)
+     if [ -n "$cache_skls" ]; then                       # empty/failed listing → prune NOTHING
+       for d in .claude/skills/skl-*/; do
+         [ -d "$d" ] || continue
+         nm=$(basename "$d")
+         printf '%s\n' $cache_skls | grep -qxF "$nm" || { echo "prune (removed from main): $nm"; rm -rf "$d"; }
+       done
+     fi
+     ```
+     Only `skl-*` skills are pruned; **agents are never pruned** (shared + additive). A pruned skill's
+     `project.config.md` goes with it — correct, since the skill no longer exists.
    - **Agents** — copy `~/.skl/agents/*.md` into the project's agents dir. Use `.claude/agents/`
      if it exists; otherwise, if the agents live in `~/.claude/agents/`, sync there (match how they were
      originally installed).
@@ -73,8 +90,8 @@ It does **not** touch Spec Kit / the `speckit-*` skills, your
      installed version (skip silently if `VERSION` is absent upstream).
    - **Do not** regenerate or delete any `project.config.md`; **do not** touch Spec Kit, `specs/`, or
      the user's code.
-4. **Report + reload.** List which skills + agents were updated and confirm each `project.config.md`
-   was kept. Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-update done — ${CURR_V:-fresh}→${NEW_V:-$NEW}"`,
+4. **Report + reload.** List which skills + agents were updated, which (if any) were **pruned** as
+   removed from `main`, and confirm each `project.config.md` was kept. Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-update done — ${CURR_V:-fresh}→${NEW_V:-$NEW}"`,
    then tell the user to **reload Claude Code** so the refreshed skill versions register.
 
 ---
@@ -89,8 +106,10 @@ It does **not** touch Spec Kit / the `speckit-*` skills, your
   the "what's new" output; `.claude/.skl-version` records what's installed in the project.
   Reporting failures fall back to SHA output and never block the sync.
 - **Skills + agents only.** Doesn't update Spec Kit, your `specs/`, or your code.
-- **Exact match to `main`.** After it runs, the project's `skl-*` skills + agents equal `origin/main`
-  (minus your preserved configs).
+- **Exact match to `main`.** After it runs, the project's `skl-*` skills equal `origin/main` (minus
+  your preserved configs) — **including removals**: an `skl-*` skill deleted upstream is pruned
+  locally. The prune is guarded (runs only when the cache lists ≥ 1 skill) and scoped to the `skl-*`
+  namespace; agents are additive-only and never pruned.
 - **Private repo over your own auth.** First clone uses `gh`; later updates use `git fetch`. On an
   auth/network failure, surface the real error — don't fall back to a stale or guessed source.
 - **Idempotent.** If already at `origin/main`, it's a no-op that reports "up to date".
