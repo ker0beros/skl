@@ -51,8 +51,8 @@ project's **constitution** + `CLAUDE.md`. The QA gate is **identical** to skl-fe
 1. Read `resources/project.config.md`.
 2. **Discover ready plans.** Scan `specs/*/spec.md` for a `Loop-Status: ready` line (also surface
    `running` plans as **resumable**). For each, read the plan number `NNN`, slug, recorded surface/mode
-   (design vs text-only), and the one-line intent. If **none are ready**, tell the user to create plans
-   with `/skl-plan` and **stop**.
+   (design vs text-only), and the one-line intent. If **none are ready and none are `running`**, tell
+   the user to create plans with `/skl-plan` and **stop**.
 3. **Select.**
    - **`--auto`** → skip the question entirely: run any `running` (resumable) plans first, then
      **all** ready plans (or just the plan numbers given alongside `--auto`). No picker, no await ping.
