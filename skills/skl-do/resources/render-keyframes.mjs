@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// render-keyframes.mjs — skl-feature visual/animation capture helper.
+// render-keyframes.mjs — skl-do visual/animation capture helper.
 //
 // Renders a Claude Design HTML bundle (or a live URL) to:
 //   - a layout screenshot per viewport
@@ -33,7 +33,7 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync } from 'no
 import http from 'node:http'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-// resources -> skl-feature -> skills -> .claude -> <repo root>
+// resources -> skl-do -> skills -> .claude -> <repo root>
 const repoRoot = resolve(__dirname, '..', '..', '..', '..')
 
 // ---- arg parsing -----------------------------------------------------------
@@ -52,7 +52,7 @@ function parseArgs(argv) {
   return out
 }
 
-const HELP = `render-keyframes.mjs — skl-feature visual/animation capture helper
+const HELP = `render-keyframes.mjs — skl-do visual/animation capture helper
 
   --html <file>        HTML bundle to render (served over a local http server)
   --url  <url>         live URL to render instead of an HTML file

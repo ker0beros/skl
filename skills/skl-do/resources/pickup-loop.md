@@ -1,13 +1,14 @@
-# Pickup-loop mechanics for `/skl-pickup-ticket` (GitHub / GitLab)
+# Ticket mechanics for `/skl-do` (GitHub / GitLab)
 
-> The exact per-provider commands for **polling** (resume `loop-in-progress` first, then `loop-ready`),
-> **claiming** a ticket (`loop-ready` → `loop-in-progress`), **opening the PR/MR** + marking it
-> `loop-done`, **deferring** (`loop-in-progress` → `loop-deferred`) with a findings comment, **routing to needs-info** (`loop-in-progress` → `loop-needs-info`) with a request-info comment, and the
-> **wait** between polls. SKILL.md sequences these; this file is the source of truth for the commands.
-> Reuse `skl-fix/resources/issue-access.md` if a fetch hits an auth wall. Never merge directly (under
-> `--merge-on-green`, only the provider's CI-gated auto-merge — commands below); never apply
-> `loop-ready` yourself (a human curates that queue; restoring it on an interactive readiness-gate
-> **Skip** is that human's decision, relayed) — but the loop *does* drive every later transition.
+> The exact per-provider commands for **selecting one ticket** (resume `loop-in-progress` first, then
+> the oldest `loop-ready`), **claiming** it (`loop-ready` → `loop-in-progress`), **opening the PR/MR** +
+> marking it `loop-done`, **deferring** (`loop-in-progress` → `loop-deferred`) with a findings comment,
+> and **routing to needs-info** (`loop-in-progress` → `loop-needs-info`) with a request-info comment.
+> SKILL.md sequences these; this file is the source of truth for the commands.
+> Reuse `resources/issue-access.md` if a fetch hits an auth wall. **Never merge** — a human reviews and
+> merges the PR; never apply `loop-ready` yourself (a human curates that queue; restoring it on an
+> interactive readiness-gate **Skip** is that human's decision, relayed) — but the loop *does* drive
+> every later transition.
 
 ## Identify the host + provider
 
@@ -57,22 +58,15 @@ gh issue edit <n> --remove-label "loop-ready" --add-label "loop-in-progress"
 
 **Open the PR** (after the branch is pushed; write the body to a scratchpad temp file first):
 ```bash
-git push -u origin skl-pickup/<n>-<slug>
+git push -u origin skl-do/<n>-<slug>
 gh pr create \
   --base <pr_base_branch> \
-  --head skl-pickup/<n>-<slug> \
+  --head skl-do/<n>-<slug> \
   --title "fix(#<n>): <slug>" \        # or "feat(#<n>): <slug>"
   --body-file <temp-body-file>          # summary + QA evidence + a line "Closes #<n>"
 ```
-`gh pr create` prints the PR URL — record it. **Never** run an immediate `gh pr merge` — the only
-allowed form is the `--auto` one below, which delegates the merge to GitHub's CI gate.
-
-**`--merge-on-green` only — enable auto-merge right after create** (method from `automerge_method`;
-requires the repo's allow-auto-merge setting + required checks on the base, which the calling
-`/skl-auto` verifies in its Phase 0):
-```bash
-gh pr merge <pr-url> --auto --squash
-```
+`gh pr create` prints the PR URL — record it. **Never merge** — not `gh pr merge`, not auto-merge:
+a human reviews and merges the PR.
 
 **On success — mark done** (after the PR is open; the issue stays open until the PR merges via `Closes #<n>`):
 ```bash
@@ -127,21 +121,16 @@ empty → no eligible ticket. The issue's per-project number is `iid`.
 
 **Open the MR** (after the branch is pushed; `Closes #<iid>` in the description auto-closes the issue):
 ```bash
-git push -u origin skl-pickup/<n>-<slug>
+git push -u origin skl-do/<n>-<slug>
 [GITLAB_HOST=<host>] glab mr create \
-  --source-branch skl-pickup/<n>-<slug> \
+  --source-branch skl-do/<n>-<slug> \
   --target-branch <pr_base_branch> \
   --title "fix(#<iid>): <slug>" \       # or "feat(#<iid>): <slug>"
   --description "$(cat <temp-body-file>)" \   # ends with "Closes #<iid>"
   --yes
 ```
-`glab mr create` prints the MR URL — record it. **Never** run an immediate `glab mr merge` — the
-only allowed form is the auto-merge one below (merge-when-pipeline-succeeds).
-
-**`--merge-on-green` only — enable merge-when-pipeline-succeeds right after create:**
-```bash
-[GITLAB_HOST=<host>] glab mr merge <iid> --auto-merge
-```
+`glab mr create` prints the MR URL — record it. **Never merge** — not `glab mr merge`, not
+merge-when-pipeline-succeeds: a human reviews and merges the MR.
 
 **On success — mark done** (after the MR is open; the issue stays open until the MR merges via `Closes #<iid>`):
 ```bash
@@ -165,36 +154,15 @@ only allowed form is the auto-merge one below (merge-when-pipeline-succeeds).
 
 ## Classifying bug vs feature (content-based)
 
-Read the title + body; do **not** rely on type labels:
-- **Bug → `/skl-fix`** when it reports something broken: an error/stack trace, crash, regression,
-  "doesn't work", wrong/unexpected output, a reproduction of misbehavior.
-- **Feature → `/skl-feature`** when it asks for new capability: add / support / implement / introduce a
-  behavior, screen, endpoint, or option.
-- Ambiguous → without `--auto`, ask once; with `--auto`, pick the better fit (new behavior ⇒ feature,
-  described defect ⇒ fix).
+Read the title + body; do **not** rely on type labels. Both bug and feature tickets build through the
+**same inline QA-gated loop** (Phase B) — classification only frames how the intent is seeded into
+`speckit-specify`:
+- **Bug** — it reports something broken: an error/stack trace, crash, regression, "doesn't work",
+  wrong/unexpected output, a reproduction of misbehavior → seed the intent as `fix: <symptom / expected-vs-actual>`.
+- **Feature** — it asks for new capability: add / support / implement / introduce a behavior, screen,
+  endpoint, or option → seed the intent as the requested capability.
+- Ambiguous → without `--auto`, ask once; with `--auto`, pick the better fit (new behavior ⇒ feature
+  framing, described defect ⇒ fix framing).
 
-Classification feeds the **readiness gate** (SKILL.md step 2.5 + `readiness-check.md`) before any sub-skill runs. Pass `--auto` straight through to the chosen sub-skill so it runs zero-prompt.
-
----
-
-## The wait between polls (ScheduleWakeup)
-
-`pickup_poll_interval` defaults to **30 min = 1800 s**, which is under `ScheduleWakeup`'s 1 h cap, so one
-wakeup covers a poll gap (no hourly re-arm needed — unlike `/skl-resume`'s multi-hour waits):
-
-```
-ScheduleWakeup(
-  delaySeconds = <pickup_poll_interval in seconds>,   # 1800 for 30m
-  prompt       = "/skl-pickup-ticket <same flags>",   # preserve --auto / --alive
-  reason       = "poll loop-ready queue (<n>/<limit>)" # or "(alive)"
-)
-```
-Then **end the turn**. On wake the skill re-enters, re-reads `.skl-pickup/state.md`, and re-polls.
-- `--alive` → always re-arm (never exits on empty polls).
-- otherwise → re-arm while the empty-poll counter `< pickup_empty_limit`; at the limit, **exit** and require
-  a manual re-run.
-- `--drain` → **never arm a wakeup**: on the first empty poll write `State: exited(drained)` and
-  STOP (driver mode — the calling `/skl-auto` owns all polling).
-
-If `ScheduleWakeup` can't be armed standalone, run under the built-in loop: `/loop /skl-pickup-ticket`
-(self-pacing). A cloud cron is **not** a substitute — it can't drive the in-session build loop.
+Classification feeds the **readiness gate** (SKILL.md Phase 0 step 6 + `readiness-check.md`) before the
+build runs. Under `--auto` the build runs zero-prompt (skip clarification + the spec-review gate).

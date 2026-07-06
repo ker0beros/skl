@@ -1,7 +1,7 @@
-# Granting issue access for `/skl-fix` (GitHub / GitLab)
+# Granting issue access for `/skl-do` (GitHub / GitLab)
 
-> Followed by `/skl-fix` Phase 0 when fetching a linked issue fails with an **auth / permission /
-> private-404** error. Walk the user through these steps **interactively, one at a time**, then
+> Used by `/skl-do` (and `/skl-next`) when fetching an issue fails with an **auth /
+> permission / private-404** error. Walk the user through these steps **interactively, one at a time**, then
 > **retry the fetch**. The user runs the login commands themselves with the **`!` prefix** (e.g.
 > `! gh auth login`) so the interactive prompt runs in the session — Claude cannot drive a browser
 > login. Never store or echo tokens; never fabricate an issue you couldn't read.
@@ -63,7 +63,6 @@
 ---
 
 ## After access is granted
-Re-run the original `gh`/`glab` fetch from Phase 0, then continue: turn the issue's title + body +
-comments into the bug description and proceed to `systematic-debugging`. Cite the issue URL in the
-backlog row and the spec's `Fix-Issue` line for traceability. `/skl-fix` does **not** modify or close
-the issue (read-only) unless the user explicitly asks.
+Re-run the original `gh`/`glab` fetch, then continue working the ticket (classify → readiness gate →
+the inline build in Phase B). The loop reads the issue only — it does **not** modify or close it; the
+PR's `Closes #<n>` closes it when a human merges.

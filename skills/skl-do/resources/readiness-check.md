@@ -1,6 +1,6 @@
-# Ticket-readiness check for `/skl-pickup-ticket` (step 2.5)
+# Ticket-readiness check for `/skl-do` (Phase 0 step 6)
 
-> Runs after classify (step 2), before work (step 3). The driver spawns `skl-business-analyst`
+> Runs after classify (Phase 0 step 5), before the build (Phase A). The driver spawns `skl-business-analyst`
 > with the seed below; the agent reports per-item findings + a `READINESS:` verdict; the **driver**
 > routes (proceed / ask the human / `loop-needs-info`). Rationale: a vague ticket must cost one
 > comment, not 10 QA-gated iterations — this is the constitution's Loop Engineering
@@ -16,7 +16,7 @@ stops wasted iterations; it does not bounce workable tickets for form.
 
 ## Rubric
 
-**Bug (routes to `/skl-fix`):**
+**Bug (built inline in Phase B, intent framed as a fix):**
 
 | Item | Ready when… |
 |---|---|
@@ -24,7 +24,7 @@ stops wasted iterations; it does not bounce workable tickets for form.
 | Reproduction path or evidence | Steps / context / logs / a stack trace — enough to attempt a repro |
 | Expected vs actual | Both sides stated, or unambiguously inferable |
 
-**Feature (routes to `/skl-feature`):**
+**Feature (built inline in Phase B):**
 
 | Item | Ready when… |
 |---|---|
@@ -49,39 +49,39 @@ Labels: <labels>
 
 Return: per-item status (present / inferred — say from where / missing), a draft request-info
 comment (only if anything is missing; template in
-.claude/skills/skl-pickup-ticket/resources/readiness-check.md), and the mandatory last line:
+.claude/skills/skl-do/resources/readiness-check.md), and the mandatory last line:
 `READINESS: ready` or `READINESS: not-ready — missing: <item>; <item>`.
 ```
 
 ## Request-info comment template (posted on the needs-info route)
 
 ```md
-🤖 **skl pickup loop — more info needed.** This ticket was labeled `loop-ready`, but it's
-missing what the autonomous loop needs to work it reliably:
+🤖 **skl-do — more info needed.** This ticket was labeled `loop-ready`, but it's
+missing what the loop needs to build it reliably:
 
 - **<item>** — <concrete ask, e.g. "the steps or context that trigger the failure, or a log/stack trace">
 - **<item>** — <concrete ask>
 
 Once the description is updated: remove the `loop-needs-info` label and re-add `loop-ready` —
-the loop will pick the ticket up on its next poll.
+then re-run `/skl-do` to work it.
 ```
 
 ## Routing (driver-owned — the agent only reports)
 
-- **`READINESS: ready`** → step 3 (work the ticket). No comment, no label change.
+- **`READINESS: ready`** → Phase A (build the ticket). No comment, no label change.
 - **`not-ready` + `--auto`** →
   1. flip `pickup_inprogress_label` → `pickup_needsinfo_label` (commands in `pickup-loop.md`);
   2. post the request-info comment (the agent's draft, driver-reviewed);
-  3. add the id to the state-file skip-list; record the result as `needs-info` and clear the in-flight ticket;
-  4. `bash ~/.claude/notify-telegram.sh "[<project>] /skl-pickup-ticket ⏸ #<n> needs info — labeled loop-needs-info"`;
-  5. **loop mode → step 1** (next ticket); **`#N` mode → STOP**.
+  3. record the result as `needs-info` and clear the in-flight ticket;
+  4. `bash ~/.claude/notify-telegram.sh "[<project>] /skl-do ⏸ #<n> needs info — labeled loop-needs-info"`;
+  5. then **STOP** (one ticket per run — a human answers the comment and re-labels `loop-ready`, then re-runs).
 - **`not-ready`, interactive (no `--auto`)** → fire the await ping, then `AskUserQuestion`
   listing the missing items, options:
   - **Answer now** → post the user's answers as an issue comment (the durable record), seed
-    them into the step-3 sub-skill invocation, → step 3.
+    them into the build, → Phase A.
   - **Route to needs-info** → the `--auto` path above.
   - **Skip this ticket** → flip `pickup_inprogress_label` back to `pickup_label` (a future run
-    can claim it), skip-list the id + clear the in-flight ticket, → step 1 (loop) / STOP (`#N`).
+    can claim it), clear the in-flight ticket, then **STOP**.
 - **`#N` tickets may carry no lifecycle label** (an explicit number bypasses the gate) — use
   add-only labeling and tolerate a failed remove (`--remove-label` on an absent label is not an
   error worth stopping for).

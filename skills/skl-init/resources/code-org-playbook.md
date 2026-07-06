@@ -4,7 +4,7 @@
 > row as a *hypothesis to confirm or refresh via `WebSearch`* against current community guidance,
 > then present 2–4 concrete candidates (with cited sources) for the user to choose. Whatever they
 > pick must be **spelled out** in the constitution: topology + allowed dependency direction +
-> naming + LOC budgets — because `/skl-refactor` Phase 0 reads the constitution as its target.
+> naming + LOC budgets — because the QA `skl-guideline-auditor` gate reads the constitution as its target.
 
 ## The shape every candidate must end up in
 
@@ -13,7 +13,7 @@
 | Topology | the packages / modules / layers and what each is responsible for |
 | Dependency direction | who may import whom; what must NOT be imported (the arrows) |
 | Naming | file/dir naming, suffixes, feature vs. layer foldering |
-| Size budgets | LOC ceilings per file/class/function (so skl-refactor has a measure) |
+| Size budgets | LOC ceilings per file/class/function (so the guideline gate has a measure) |
 | Testing placement | where tests live + coverage floors (pairs with the TDD principle) |
 
 ## Stack → common idiomatic organizations (confirm via web search)

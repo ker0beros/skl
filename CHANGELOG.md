@@ -4,6 +4,39 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 2.0.0 — 2026-07-06
+
+- **skl is now a lean, human-gated, ticket-based toolkit (14 → 8 commands).** The one sanctioned flow:
+  plan with Superpowers (brainstorm a feature / debug a bug) → capture with **`/skl-ticket`** → review
+  + label `loop-ready` → **`/skl-do`** builds the ticket through the QA-gated loop and opens a PR → you
+  review + **merge** → repeat. skl never drives itself across tickets and never merges for you.
+- **Removed the autonomous / batch commands:** `/skl-auto` (the hands-off driver), `/skl-fix`,
+  `/skl-refactor`, `/skl-plan`, the old batch `/skl-run`, and the standalone builder `/skl-feature`
+  (its build loop is now **folded into `/skl-do`**); plus the orphaned `skl-refactoring-specialist`
+  agent.
+- **Removed all auto-merge** — `--merge-on-green`, the `automerge_base` / `automerge_method` config,
+  and the provider merge-when-green commands (`gh pr merge --auto`, `glab mr merge --auto-merge`).
+  Every PR awaits a human merge.
+- **`/skl-do`** *(was `/skl-pickup-ticket`)* is the single ticket command: it selects one `loop-ready`
+  ticket (or `#N`), readiness-gates it, and **builds it end-to-end through the QA-gated loop it owns**
+  (speckit `specify + clarify` → a human spec-review gate → `plan → … → implement` → an 8-agent QA
+  panel, max 10 iterations), opens a PR that `Closes` the issue, then **STOPS**. One ticket per run —
+  never auto-advances, never merges. Bug tickets build framed as a fix; a ticket that names a
+  claude.ai/design ref builds design-driven.
+- **Renamed for a shorter surface:** `/skl-create-ticket` → **`/skl-ticket`**, `/skl-pickup-ticket` →
+  **`/skl-do`**, `/skl-gate` → **`/skl-strictness`**, `/skl-next-step` → **`/skl-next`**. Just run the
+  new names (`/skl-update` prunes the old ones on update). State/branch also renamed: `.skl-pickup/` →
+  `.skl-do/`, branch prefix `skl-pickup/*` → `skl-do/*`.
+- **`/skl-resume` now resumes from a durable checkpoint.** `/skl-do` checkpoints its progress (ticket,
+  phase, iteration, last step) to `.skl-do/state.md`; `/skl-resume` reads that + the `loop-in-progress`
+  label and continues the same ticket **in a fresh context** — so you can `/clear` and just run
+  `/skl-resume`. A usage-cap stop still waits for the reset first; a crash or `/clear` continues
+  immediately.
+- **Superpowers** is no longer invoked by any skl skill — it's now **recommended for the planning
+  step** (brainstorm a feature / debug a bug before filing a ticket).
+- Command surface: **14 → 8 skills, 11 → 10 agents.** Remaining commands: `skl-init`, `skl-ticket`,
+  `skl-do`, `skl-strictness`, `skl-next`, `skl-update`, `skl-resume`, `skl-help`.
+
 ## 1.6.0 — 2026-07-06
 
 - **Removed skill `/skl-design`; folded it into `/skl-plan --design`.** The design-ideation

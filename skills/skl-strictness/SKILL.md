@@ -1,11 +1,11 @@
 ---
-name: skl-gate
-description: "Choose how strict the QA gates are for /skl-feature and /skl-refactor, the way /effort chooses reasoning effort — a 3-stop slider: strict, standard, or low. strict = a round passes only at 0 Critical/High/Medium/Low/Info (even info-level lints must be clean). standard (default) = 0 Critical/High/Medium/Low (Info ignored). low = 0 Critical/High/Medium (Low + Info ignored, only Medium-and-above blocks). Writes gate_strictness into every installed skill's project.config.md."
+name: skl-strictness
+description: "Choose how strict the QA gates are for /skl-do (the ticket build loop), the way /effort chooses reasoning effort — a 3-stop slider: strict, standard, or low. strict = a round passes only at 0 Critical/High/Medium/Low/Info (even info-level lints must be clean). standard (default) = 0 Critical/High/Medium/Low (Info ignored). low = 0 Critical/High/Medium (Low + Info ignored, only Medium-and-above blocks). Writes gate_strictness into every installed skill's project.config.md."
 argument-hint: "(optional) strict | standard | low — empty shows the slider picker"
 metadata:
   author: "khairul"
   version: "1.0.0"
-  source: "skills/skl-gate"
+  source: "skills/skl-strictness"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -22,7 +22,7 @@ If the input names a mode, set it **directly** (skip the picker): `strict` → *
 
 ## What this command does
 
-`/skl-gate` is the QA-gate analogue of `/effort`: it sets **how strict the pass threshold is** for `/skl-feature` and `/skl-refactor`. The setting lives as `gate_strictness:` in each skill's `resources/project.config.md`, and both loops read it when they evaluate the QA panel.
+`/skl-strictness` is the QA-gate analogue of `/effort`: it sets **how strict the pass threshold is** for `/skl-do`'s build loop. The setting lives as `gate_strictness:` in each skill's `resources/project.config.md`, and the loop reads it when it evaluates the QA panel.
 
 | Mode | A QA round passes at | What's logged (non-blocking) |
 |------|----------------------|------------------------------|
@@ -45,7 +45,7 @@ A config missing the field is read as **standard**.
 2. **Read the current mode.** `grep` `gate_strictness:` in the first config (treat absent as `standard`). You'll show it as the current position and pre-select it.
 3. **Decide the target mode.**
    - If `$ARGUMENTS` named one → use it.
-   - Otherwise **show the slider picker.** First fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-gate awaiting choice"`, then call `AskUserQuestion` with the **three** options below. **List the current mode first** and append " · current" to its label so the slider opens on today's setting. Use these exact previews — the filled knob ● moves across the three stops (strict ↔ standard ↔ low), the "moving arrow":
+   - Otherwise **show the slider picker.** First fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-strictness awaiting choice"`, then call `AskUserQuestion` with the **three** options below. **List the current mode first** and append " · current" to its label so the slider opens on today's setting. Use these exact previews — the filled knob ● moves across the three stops (strict ↔ standard ↔ low), the "moving arrow":
 
      **Strict** — preview:
      ```
@@ -79,8 +79,8 @@ A config missing the field is read as **standard**.
       Low + Info logged, non-blocking
      ```
      description: "Loosest. Only Medium-and-above blocks; Low findings and info-level lints both pass (logged). Fastest to converge."
-4. **Apply to every config.** For each `project.config.md` found, set the mode: if a `gate_strictness:` line exists, replace its value; if not, add the line (right after `playwright:` if present, else near the top). Keep the trailing explanatory comment. Update **all** of them so `/skl-feature` and `/skl-refactor` agree.
-5. **Confirm.** Print the chosen mode, the resulting pass threshold (the table row), and the list of config files updated. Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-gate set to <mode>"`. The change takes effect on the **next** `/skl-feature` or `/skl-refactor` run (the loops read `gate_strictness` when they evaluate the panel) — no reload needed.
+4. **Apply to every config.** For each `project.config.md` found, set the mode: if a `gate_strictness:` line exists, replace its value; if not, add the line (right after `playwright:` if present, else near the top). Keep the trailing explanatory comment. Update **all** of them so every skill's gate agrees.
+5. **Confirm.** Print the chosen mode, the resulting pass threshold (the table row), and the list of config files updated. Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-strictness set to <mode>"`. The change takes effect on the **next** `/skl-do` run (the loop reads `gate_strictness` when it evaluates the panel) — no reload needed.
 
 ---
 

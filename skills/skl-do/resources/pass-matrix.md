@@ -1,12 +1,12 @@
-# skl-feature — QA pass matrix
+# skl-do — QA pass matrix
 
-This is the gate definition for Phase B step 12–13 of `SKILL.md`. The `/skl-feature` driver
+This is the gate definition for Phase B step 12–13 of `SKILL.md`. The `/skl-do` driver
 owns the pass/fail call; the agents only **report**. A finding's severity is whatever the
 agent assigns (Critical / High / Medium / Low).
 
 ## Pass rule
 
-The threshold depends on **`gate_strictness`** in `project.config.md` (toggle it with `/skl-gate`; treat a missing field as `standard`). The severity ladder is **Critical › High › Medium › Low › Info** (Info = info-level lint diagnostics / hints). **Medium and above always block**; the mode decides how far below that also blocks:
+The threshold depends on **`gate_strictness`** in `project.config.md` (toggle it with `/skl-strictness`; treat a missing field as `standard`). The severity ladder is **Critical › High › Medium › Low › Info** (Info = info-level lint diagnostics / hints). **Medium and above always block**; the mode decides how far below that also blocks:
 
 - **`low`** — a single gate **passes** iff it reports **0 Critical, 0 High, AND 0 Medium**. **Low + Info** are logged as non-blocking debt.
 - **`standard`** (default) — passes only at **0 Critical, 0 High, 0 Medium, AND 0 Low**. **Info** is logged, non-blocking.
@@ -73,7 +73,7 @@ severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the dr
 | Correctness | `skl-code-reviewer` | Adversarially review the diff for defects: logic errors, edge/boundary cases, error-handling gaps, races, resource leaks, hot-path perf smells. Every High+ finding must include a concrete failure scenario. |
 | Security | `skl-security-auditor` | Security-review the diff in repo context: injection, authn/authz gaps, committed secrets, unsafe input/file handling, risky new dependencies, prompt-injection into LLM/agent calls. Every High+ finding must include a plausible exploit path. |
 | Test integrity | `skl-test-integrity-auditor` | Read the test diff adversarially: weakened/rewritten assertions, deleted/skipped tests, lowered coverage or gate thresholds, mock-only tests, missing tests for new behavior (constitution TDD). |
-| UI + design/animation parity | `skl-ui-tester` | **Design mode** — verify **every Visual Target + Animation Inventory row** against **rendered pixels, not spec text**. **Web:** start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/skl-feature/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. **Mobile:** run the `mobile_render` recipe from `project.config.md` (see `resources/mobile-render.md`) — boot the target simulator/emulator (**default iOS iPad**), launch the app, drive it via **Mobile MCP** to each design-driven screen, and **write a real screenshot per screen into `specs/<feature>/verification/`** at the device's `device_logical_size`. Then **visually compare each capture to `references/`** for: (a) content **clipped / cut off at the screen edge** — a scrollable that never reaches its last item still clips, so scroll it to the end; (b) **non-scrollable overflow**; (c) **doubled or missing chrome** (e.g. the app draws its own status bar while the OS bar is also visible, or a bar the design shows is gone); (d) per-element layout / color / spacing fidelity. Any missing element, wrong trigger, or duration/easing outside ±20% is at least **Medium**; **edge-clipping and doubled/missing chrome are at least High**. **No `verification/` render ⇒ no pass** (render gate above): if the simulator/MCP is unavailable, report a **High** finding and request a user-supplied device screenshot — **never** substitute a functional smoke. **Text-only mode:** no Visual Targets — if the feature has UI, functionally smoke the new flow (states, edge cases, errors); if it's non-UI, runtime-smoke the feature's paths. |
+| UI + design/animation parity | `skl-ui-tester` | **Design mode** — verify **every Visual Target + Animation Inventory row** against **rendered pixels, not spec text**. **Web:** start the `web_dev_server` command from `project.config.md`, then `node .claude/skills/skl-do/resources/render-keyframes.mjs --url <route> --out specs/<feature>/verification --viewport <same> --timestamps <same>`; diff the new `animation-timings.json` vs `references/animation-timings.json`. **Mobile:** run the `mobile_render` recipe from `project.config.md` (see `resources/mobile-render.md`) — boot the target simulator/emulator (**default iOS iPad**), launch the app, drive it via **Mobile MCP** to each design-driven screen, and **write a real screenshot per screen into `specs/<feature>/verification/`** at the device's `device_logical_size`. Then **visually compare each capture to `references/`** for: (a) content **clipped / cut off at the screen edge** — a scrollable that never reaches its last item still clips, so scroll it to the end; (b) **non-scrollable overflow**; (c) **doubled or missing chrome** (e.g. the app draws its own status bar while the OS bar is also visible, or a bar the design shows is gone); (d) per-element layout / color / spacing fidelity. Any missing element, wrong trigger, or duration/easing outside ±20% is at least **Medium**; **edge-clipping and doubled/missing chrome are at least High**. **No `verification/` render ⇒ no pass** (render gate above): if the simulator/MCP is unavailable, report a **High** finding and request a user-supplied device screenshot — **never** substitute a functional smoke. **Text-only mode:** no Visual Targets — if the feature has UI, functionally smoke the new flow (states, edge cases, errors); if it's non-UI, runtime-smoke the feature's paths. |
 
 ## Severity → blocking, at a glance
 
@@ -84,7 +84,7 @@ severity, e.g. `VERDICT: 0 Critical, 0 High, 0 Medium, 0 Low, 3 Info` — the dr
   render** — none of these throw a `RenderFlex` exception, so they must be assigned **at least High**
   on visual evidence → blocks (all modes).
 - **Medium** — works with caveats / parity off within tolerance band → blocks (all modes).
-- **Low** — cosmetic / nice-to-have → blocks in `standard` + `strict`; logged, non-blocking in `low` (`/skl-gate`).
+- **Low** — cosmetic / nice-to-have → blocks in `standard` + `strict`; logged, non-blocking in `low` (`/skl-strictness`).
 - **Info** — info-level lint diagnostics / hints → blocks **only in `strict`**; logged, non-blocking in `standard` + `low`.
 
 ## Tuning ("refine as we go")
