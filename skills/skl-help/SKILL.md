@@ -42,7 +42,7 @@ rather than a hard-coded list.
    none of its skills are installed; put any unrecognized `skl-*` skill under **Other**). For each
    command show `/<name> <argument-hint>` and the **first sentence** of its `description`:
 
-   - **Setup** — `skl-init`
+   - **Setup** — `skl-init` · `skl-telegram` (set up Telegram notifications)
    - **Tickets** — `skl-ticket` (file an issue on GitHub/GitLab/Jira) · `skl-do` (build the oldest `loop-ready` ticket into a PR, then stop)
    - **Controls** — `skl-strictness` (QA strictness)
    - **Ops** — `skl-update` (pull latest) · `skl-resume` (continue after a usage-limit reset)

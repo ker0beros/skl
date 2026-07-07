@@ -27,6 +27,7 @@ merges for you:
 | Skill | Input | What it does |
 |-------|-------|--------------|
 | **`/skl-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
+| **`/skl-telegram`** | your **bot token + chat id** | Sets up Telegram notifications — installs the sender every skl skill calls and stores the two creds in the project-root `.env` (600, git-ignored) via a **no-echo prompt you run** (secrets never enter the chat), then sends a test ping. `test` / `status` sub-commands |
 | **`/skl-ticket`** | a **rough issue**, or a **plan / FSD doc** | Drafts a structured ticket in the repo's house style — from a rough description **or a plan/FSD doc** (`--plan`/`--fsd <path>`: a Claude plan-mode file, a Superpowers plan, or a spec — distilled into the ticket and preserved verbatim for `/skl-do` to reuse) — then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Never applies a `loop-*` label — promoting to `loop-ready` is your decision |
 | **`/skl-do`** | (optional) **`#N`**; `--auto` | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
 | **`/skl-next`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
@@ -158,11 +159,29 @@ you can clear the context and just run `/skl-resume`. If a **usage cap** stopped
 status-bar reset **+ 3 min** (in-session via `ScheduleWakeup`, re-arming hourly) before continuing;
 otherwise it continues immediately.
 
+## `/skl-telegram` — set up Telegram notifications
+
+```
+/skl-telegram          # setup wizard: install sender, store creds, send a test ping
+/skl-telegram test     # re-send a test message
+/skl-telegram status   # is it configured? (never reads your .env)
+```
+Every skl skill already pings Telegram on completion / when it needs you
+(`bash ~/.claude/notify-telegram.sh "[<project>] …"`), but that does nothing until the sender and your
+creds exist. `/skl-telegram` installs the sender to `~/.claude/notify-telegram.sh` and stores your **bot
+token** + **chat id** in the **project-root `.env`** (`chmod 600`, ensured git-ignored), then sends a real
+test message to confirm. **Secrets never pass through the chat** — you type them at a no-echo shell prompt
+you run yourself (`read -rs`), and the agent is hook-blocked from reading `.env` anyway. Optional add-ons:
+a global `~/.config/claude/.env` fallback (so pings also fire from other dirs / a local cron) and appending
+the ping convention to `~/.claude/CLAUDE.md` (pings across all projects). Creds in a git-ignored `.env`
+cover **local runs in the project dir**; remote/cloud/CI runs need the two vars in their own environment.
+
 ## What's in here
 
 ```
 agents/               # 10 subagents — 8 QA gate agents + skl-debugger (failure-time) + skl-business-analyst (skl-do Phase A + readiness gate)
 skills/skl-init/     # SKILL.md + resources/ (code-org playbook) — one-time setup + constitution
+skills/skl-telegram/  # SKILL.md + resources/ (notify-telegram.sh sender) — set up Telegram notifications (creds in project .env)
 skills/skl-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
 skills/skl-do/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check + issue-access + pass-matrix + render-keyframes.mjs + mobile-render + no-overflow-testing + templates + config example) — build one loop-ready ticket → PR, then stop
 skills/skl-next/  # SKILL.md — read-only triage advisor: current-state snapshot → unblock-first next step + offer
@@ -227,8 +246,8 @@ on first run.
 
 Then:
 
-1. **Reload Claude Code** so the skills (`/skl-init`, `/skl-ticket`, `/skl-do`, `/skl-next`,
-   `/skl-strictness`, `/skl-update`, `/skl-resume`, `/skl-help`) and the agents register.
+1. **Reload Claude Code** so the skills (`/skl-init`, `/skl-telegram`, `/skl-ticket`, `/skl-do`,
+   `/skl-next`, `/skl-strictness`, `/skl-update`, `/skl-resume`, `/skl-help`) and the agents register.
 2. **Install the Superpowers plugin** (recommended — for the planning step) — in Claude Code:
    ```
    /plugin marketplace add obra/superpowers-marketplace
