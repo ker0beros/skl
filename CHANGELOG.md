@@ -4,6 +4,21 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 2.2.0 — 2026-07-07
+
+- **New `/skl-telegram`.** Sets up Telegram notifications end-to-end — installs the
+  `~/.claude/notify-telegram.sh` sender (the one every skl skill already calls), stores your bot token +
+  chat id in the **project-root `.env`** (`chmod 600`, git-ignored), and verifies with a real test ping.
+  Secrets are entered at a **no-echo prompt you run yourself** (`read -rs`) — they never pass through the
+  chat, and the agent is hook-blocked from reading `.env`. The write preserves other vars in an existing
+  `.env`, and a git-**tracked** `.env` is a hard stop. `test` re-sends a ping; `status` reports config
+  without reading `.env`. Optional add-ons: a global `~/.config/claude/.env` fallback (cross-dir / local
+  cron) and appending the `[<project>]`-prefixed ping convention to `~/.claude/CLAUDE.md`.
+- The bundled sender resolves creds from a **cascade** — `$PWD/.env` → `~/.config/claude/.env` →
+  `~/.config/claude/telegram.env` → the legacy fallback — so per-project and older global setups both work.
+- Notifications are scoped to **local runs in the project dir** (git-ignored `.env` doesn't travel to
+  remote/cloud/CI runs); the skill says so and the global fallback widens coverage.
+
 ## 2.1.0 — 2026-07-06
 
 - **`/skl-ticket` can seed a ticket from a plan or FSD doc.** Pass `--plan <path>` / `--fsd <path>`
