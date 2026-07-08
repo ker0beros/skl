@@ -10,7 +10,7 @@
 # skl-do — progress checkpoint
 
 Mode: oldest          # oldest | single(#N)
-Flags: --auto         # whichever were passed (verbatim, for a clean /skl-resume re-invoke)
+Unattended: no        # yes if SKL_UNATTENDED was set — /skl-resume honors this so a cloud run resumes unattended
 Provider: github      # github | gitlab   (host: <host> if self-hosted)
 PR base: main
 Started: <ISO-8601>

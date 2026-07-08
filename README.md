@@ -30,7 +30,7 @@ merges for you:
 | **`/skl-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
 | **`/skl-telegram`** | your **bot token + chat id** | Sets up Telegram notifications — installs the sender every skl skill calls and stores the two creds in the project-root `.env` (600, git-ignored) via a **no-echo prompt you run** (secrets never enter the chat), then sends a test ping. `test` / `status` sub-commands |
 | **`/skl-ticket`** | a **rough issue**, or a **plan / FSD doc** | Drafts a structured ticket in the repo's house style — from a rough description **or a plan/FSD doc** (`--plan`/`--fsd <path>`: a Claude plan-mode file, a Superpowers plan, or a spec — distilled into the ticket and preserved verbatim for `/skl-do` to reuse) — then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Classifies loop-readiness and proposes one **intake label** — `loop-ready` / `loop-needs-info` / `loop-human` — in the gate for you to approve; never the loop's own lifecycle labels |
-| **`/skl-do`** | (optional) **`#N`**; `--auto` | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info` / `loop-human`) |
+| **`/skl-do`** | (optional) **`#N`** | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info` / `loop-human`) |
 | **`/skl-next`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
 | **`/skl-strictness`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
 | **`/skl-update`** | (none) | Pull the latest skl from GitHub and refresh this project's skills + agents (keeps your config) |
@@ -82,7 +82,7 @@ ticket to **`loop-ready`** stays a human decision (that queue is what `/skl-do` 
 ```
 /skl-do             # the OLDEST open loop-ready issue, then stop
 /skl-do #42         # work just issue #42, then stop
-/skl-do --auto      # zero-prompt build
+SKL_UNATTENDED=1 /skl-do   # unattended (zero-prompt) build — for cloud/scheduled/CI runs
 ```
 The **ticket runner**. With no number it takes the **oldest open issue labeled `loop-ready`**; an
 explicit `#N` works that exact issue (bypassing the label gate). It classifies the ticket

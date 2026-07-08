@@ -178,8 +178,8 @@ Read the title + body; do **not** rely on type labels. Both bug and feature tick
   wrong/unexpected output, a reproduction of misbehavior → seed the intent as `fix: <symptom / expected-vs-actual>`.
 - **Feature** — it asks for new capability: add / support / implement / introduce a behavior, screen,
   endpoint, or option → seed the intent as the requested capability.
-- Ambiguous → without `--auto`, ask once; with `--auto`, pick the better fit (new behavior ⇒ feature
+- Ambiguous → interactive, ask once; unattended, pick the better fit (new behavior ⇒ feature
   framing, described defect ⇒ fix framing).
 
 Classification feeds the **readiness gate** (SKILL.md Phase 0 step 6 + `readiness-check.md`) before the
-build runs. Under `--auto` the build runs zero-prompt (skip clarification + the spec-review gate).
+build runs. When unattended (SKL_UNATTENDED=1) the build runs zero-prompt (skip clarification + the spec-review gate).

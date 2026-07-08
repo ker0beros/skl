@@ -101,29 +101,29 @@ Once decided: capture the decision here (or in the ticket body), remove `loop-hu
 ## Routing (driver-owned — the agent only reports)
 
 - **`READINESS: ready`** → Phase A (build the ticket). No comment, no label change.
-- **`needs-info` + `--auto`** →
+- **`needs-info`, unattended** →
   1. flip `pickup_inprogress_label` → `pickup_needsinfo_label` (commands in `pickup-loop.md`);
   2. post the request-info comment (the agent's draft, driver-reviewed);
   3. record the result as `needs-info` and clear the in-flight ticket;
   4. `bash ~/.claude/notify-telegram.sh "[<project>] /skl-do ⏸ #<n> needs info — labeled loop-needs-info"`;
   5. then **STOP** (one ticket per run — a human answers the comment and re-labels `loop-ready`, then re-runs).
-- **`needs-info`, interactive (no `--auto`)** → fire the await ping, then `AskUserQuestion`
+- **`needs-info`, interactive** → fire the await ping, then `AskUserQuestion`
   listing the missing items, options:
   - **Answer now** → post the user's answers as an issue comment (the durable record), seed
     them into the build, → Phase A.
-  - **Route to needs-info** → the `--auto` path above.
+  - **Route to needs-info** → the unattended path above.
   - **Skip this ticket** → flip `pickup_inprogress_label` back to `pickup_label` (a future run
     can claim it), clear the in-flight ticket, then **STOP**.
-- **`needs-human` + `--auto`** → same shape, one hop over: flip `pickup_inprogress_label` →
+- **`needs-human`, unattended** → same shape, one hop over: flip `pickup_inprogress_label` →
   `pickup_human_label`, post the **decision-needed** comment (the agent's draft, driver-reviewed), record
   the result as `needs-human` and clear the in-flight ticket,
   `bash ~/.claude/notify-telegram.sh "[<project>] /skl-do ⏸ #<n> needs a human decision — labeled loop-human"`,
   then **STOP** (a human decides, re-labels `loop-ready`, re-runs).
-- **`needs-human`, interactive (no `--auto`)** → fire the await ping, then `AskUserQuestion`
+- **`needs-human`, interactive** → fire the await ping, then `AskUserQuestion`
   listing the pending decisions, options:
   - **Decide now** → post the decision as an issue comment (the durable record), seed it into the
     build, → Phase A.
-  - **Route to loop-human** → the `--auto` path above.
+  - **Route to loop-human** → the unattended path above.
   - **Skip this ticket** → flip `pickup_inprogress_label` back to `pickup_label`, clear the in-flight
     ticket, then **STOP**.
 - **`#N` tickets may carry no lifecycle label** (an explicit number bypasses the gate) — use
