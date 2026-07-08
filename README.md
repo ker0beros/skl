@@ -1,13 +1,31 @@
 # skl
 
-Portable Claude Code skills for **spec-driven, QA-gated, autonomous loops** — a one-time setup
-command and a human-gated ticket runner that builds each ticket through an auto-iterating 8-agent QA
-panel, sharing one installer. Built on
-[Spec Kit](https://github.com/github/spec-kit) and the
-[loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology — skl is an
-implementation of its five-building-blocks + memory framework (automations, worktrees, skills,
-plugins/MCP, sub-agents, durable state), with phased **L1→L2→L3** autonomy rollout, human safety
-gates, transparent cost budgeting, and readiness scoring baked into the loop and the constitution.
+**Agentic coding with the guardrails on.** skl turns Claude Code into a disciplined software
+factory: a curated ticket queue in, reviewable PRs out — one ticket at a time, behind an
+adversarial 8-agent QA panel, and it never merges for you.
+
+Built on [Spec Kit](https://github.com/github/spec-kit) and the
+[loop-engineering](https://github.com/cobusgreyling/loop-engineering) methodology (see
+[Prerequisites](#prerequisites-on-the-target-project) and [Credits](#credits)).
+
+## What you get
+
+- **Guardrails are the product** — human-gated, PR-not-merge, one-ticket-per-run, readiness-gated,
+  strictness slider. The deliberate anti-YOLO.
+- **An adversarial QA panel** — 8 independent gate agents at a **0-findings** bar, including a
+  test-integrity auditor that catches the agent gaming its own tests.
+- **Grounded in a methodology** — the loop-engineering framework (phased **L1→L2→L3** autonomy, cost
+  budgeting, readiness scoring), not vibes.
+- **Durable & provider-agnostic** — resumes across usage caps / crashes / `/clear`; files tickets on
+  **GitHub / GitLab / Jira**.
+
+## Is this for you?
+
+**Yes, if** you write specs (or want to), work in a real repo with review discipline, and want Claude
+Code to grind a backlog into PRs you trust enough to review — not to babysit.
+
+**No, if** you want to one-shot a script, prototype fast, or have the agent merge to `main`
+unattended. skl deliberately refuses to — that's the point.
 
 ## The flow
 
@@ -41,6 +59,28 @@ The build loop chains the individual `speckit-*` skills (`specify → … → im
 result with the QA panel; a gate passes only with **0 Critical / 0 High / 0 Medium** findings (and,
 per `/skl-strictness`, also 0 Low and/or 0 Info). On failure, `skl-debugger` turns the findings into the
 next iteration's plan.
+
+## A worked example
+
+```bash
+# 1. File a ticket (or label an existing issue)
+/skl-ticket add a --json flag to the export command
+#    → review the draft, pick Create; it's filed and proposed as loop-ready
+
+# 2. You approve the queue — confirm the label is `loop-ready` (this is the human gate)
+
+# 3. Build it
+/skl-do
+#    → claims the oldest loop-ready issue → specify → clarify → (you approve the spec)
+#      → plan → implement → the 8-agent QA panel loops until 0 findings
+#      → opens a PR that `Closes` the issue, then STOPS
+
+# 4. You review the PR and merge it. Re-run /skl-do for the next ticket.
+```
+
+At no point does skl merge for you or advance to the next ticket on its own — the `loop-ready` queue
+and the PR merge are yours. For an unattended build (cloud / scheduled / CI, no human at the prompt),
+export `SKL_UNATTENDED=1` before `/skl-do`.
 
 ## `/skl-init` — first-time setup (run this once)
 
