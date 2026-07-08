@@ -2,10 +2,10 @@
 name: skl-update
 description: "Update this project's skl install to the latest version on GitHub. Reports your installed → new version and prints the changelog of what's new. Pulls the latest from the main branch of ker0beros/skl and syncs all the skl-* skills + the shared agents into this project's .claude/, PRESERVING each resources/project.config.md (your surface, gate commands, gate_strictness). Does not run the installer script. Reload Claude Code afterward so the refreshed skills register."
 argument-hint: "(none) — updates the current project from origin/main"
-compatibility: "Uses your existing git/GitHub auth to reach the private ker0beros/skl repo (gh CLI for the first clone, git fetch thereafter). Syncs the skill + agent files directly and preserves project.config.md. Needs git + gh."
+compatibility: "Clones/pulls the public ker0beros/skl repo (gh CLI for the first clone if present, else git clone; git fetch thereafter). Syncs the skill + agent files directly and preserves project.config.md. Needs git (gh optional)."
 metadata:
   author: "khairul"
-  version: "1.3.0"
+  version: "1.3.1"
   source: "skills/skl-update"
 user-invocable: true
 disable-model-invocation: true
@@ -39,9 +39,9 @@ It does **not** touch Spec Kit / the `speckit-*` skills, your
    - If `~/.skl` exists → record `OLD=$(git -C ~/.skl rev-parse --short HEAD)`, then
      `git -C ~/.skl fetch origin` and force it to exactly match main:
      `git -C ~/.skl checkout main && git -C ~/.skl reset --hard origin/main`.
-   - Else → `gh repo clone ker0beros/skl ~/.skl` (the repo is **private** — this uses your
-     `gh` auth; if it fails, surface the real error / tell the user to `gh auth login` rather than
-     guessing). Treat `OLD` as empty (fresh clone).
+   - Else → `gh repo clone ker0beros/skl ~/.skl` if `gh` is present, otherwise
+     `git clone https://github.com/ker0beros/skl ~/.skl` (public repo — no auth needed). If it fails,
+     surface the real error rather than guessing. Treat `OLD` as empty (fresh clone).
    - Capture `NEW=$(git -C ~/.skl rev-parse --short HEAD)`.
 2. **Show version + changelog.** Resolve the versions — reporting must never block the sync;
    if anything here fails (missing files, old cache state), fall back to the SHA-based output
