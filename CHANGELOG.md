@@ -4,6 +4,19 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 2.4.0 — 2026-07-08
+
+- **`/skl-do --auto` is removed** — unattended (zero-prompt) builds are now driven by the environment,
+  not a flag. Set **`SKL_UNATTENDED=1`** in a cloud / scheduled / CI run to skip the clarify questions
+  and the spec-review gate; interactive runs are always fully gated. **Migration:** replace
+  `/skl-do --auto` with `SKL_UNATTENDED=1 /skl-do`. `/skl-resume` honors the mode recorded in the
+  checkpoint, so an interrupted cloud run resumes unattended.
+- **skl is now public** — added an MIT `LICENSE`, a `CONTRIBUTING.md`, a `SECURITY.md`, and GitHub
+  issue templates; de-privatized the install/update docs (a plain `git clone` works, `gh` optional).
+- **README repositioned** — leads with the pitch, an honest "is this for you?" filter, and a worked
+  `ticket → /skl-do → PR` example.
+- **Telegram notifier** no longer ships a personal `.env` fallback path.
+
 ## 2.3.0 — 2026-07-08
 
 - **`/skl-ticket` classifies loop-readiness at creation.** After drafting, it self-assesses the ticket
