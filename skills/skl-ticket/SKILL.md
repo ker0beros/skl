@@ -5,7 +5,7 @@ argument-hint: "<rough description>  OR  --plan/--fsd <path> to a plan or spec d
 compatibility: "Needs the tooling for the chosen provider: GitHub → the gh CLI authenticated with 'repo' scope; GitLab → the glab CLI authenticated (self-hosted via GITLAB_HOST); Jira → the Atlassian MCP connector. A git remote is used to auto-detect GitHub/GitLab; Jira is chosen explicitly or via the picker."
 metadata:
   author: "khairul"
-  version: "1.1.0"
+  version: "1.2.0"
   source: "skills/skl-ticket"
 user-invocable: true
 disable-model-invocation: false
@@ -33,8 +33,10 @@ plan, or a spec) — into a well-structured ticket for this project, then **crea
 explicitly confirms**. It works across **GitHub** (`gh`), **GitLab** (`glab`), and **Jira**
 (Atlassian MCP): it resolves the target provider (auto-detecting from the git remote, asking only when
 unsure), drafts the ticket in the repo's house style, shows the full draft, and gates creation behind a
-**Create / Edit / Cancel** prompt. When the source is a plan/FSD, it distills the doc into the house
-style **and preserves the full plan verbatim** in the body so `/skl-do` can reuse it.
+**Create / Edit / Cancel** prompt. Before that gate it classifies the ticket's **loop-readiness** and
+proposes one **intake label** — `loop-ready`, `loop-needs-info`, or `loop-human` — for the user to approve.
+When the source is a plan/FSD, it distills the doc into the house style **and preserves the full plan
+verbatim** in the body so `/skl-do` can reuse it.
 
 Per-provider auth checks and the exact create commands live in **`resources/providers.md`** — read it
 when you reach the provider readiness check (Preconditions step 2) and again at creation (Step 4). How
@@ -151,6 +153,8 @@ If there is **no template**, impose structure yourself and match the existing op
   - Cross-reference related tickets (GitHub/GitLab: `#N`; Jira: `PROJ-N`) and spec numbers when relevant.
 - **Labels:** propose a safe default from the type — `bug`, `enhancement`, `documentation`, or
   `question`. For **Jira**, map the type to the **issue type** (Bug / Story / Task) and optionally a label.
+  A separate **loop intake label** (`loop-ready` / `loop-needs-info` / `loop-human`) is proposed in
+  Step 2.5 below — additional to this type label, not a replacement.
 
 **If the ticket was drafted from a plan / FSD doc** (Step 1), also — exact format in
 `resources/plan-source.md`:
@@ -162,8 +166,38 @@ If there is **no template**, impose structure yourself and match the existing op
   re-deriving it. Mind the **size guard** in `resources/plan-source.md` (warn — never silently truncate).
 
 > [!CAUTION]
-> NEVER propose or apply `loop-ready` or any other `loop-*` label. Those drive the autonomous build
-> loop and are human-gated — a human promotes a ticket to `loop-ready`, never this skill.
+> Propose **exactly one** loop **intake** label — `loop-ready`, `loop-needs-info`, or `loop-human`
+> (Step 2.5) — and apply it **only** after the user selects **Create** in Step 3. NEVER apply the loop's
+> own lifecycle-state labels — `loop-in-progress`, `loop-done`, `loop-deferred` — those belong to
+> `/skl-do` as it runs. The intake label going in *with the user's Create* IS the human gate; there is no
+> auto-apply.
+
+---
+
+## Step 2.5 — Analyze loop-readiness (pick the intake label to propose)
+
+You just drafted the ticket, so judge it yourself — **do not** spawn `skl-business-analyst` (that is
+`/skl-do`'s machinery). Apply skl's **shared readiness rubric** — the standard, the bug/feature rubric,
+and the three-way verdict — from **`../skl-do/resources/readiness-check.md`** (the sibling installed
+skill; single source of truth). The standard: *could a competent engineer with repo access start this
+ticket without asking the reporter anything?*
+
+**Resolve the label names** from `/skl-do`'s config so a renamed queue still matches: read `pickup_label`,
+`pickup_needsinfo_label`, and `pickup_human_label` from
+`.claude/skills/skl-do/resources/project.config.md`, falling back to `loop-ready` / `loop-needs-info` /
+`loop-human` if the file or a key is absent.
+
+Classify the draft into **exactly one** verdict → propose that intake label:
+
+- **ready** — every rubric item is present or inferable from the ticket + repo → propose **`loop-ready`**.
+- **needs-info** — a *fact* is missing that a human just supplies (a repro path, the expected behavior, an
+  acceptance criterion) → propose **`loop-needs-info`**, and note the **missing facts**.
+- **needs-human** — the ticket needs a *human decision/action* the loop can't make even when fully
+  described (a design/UX/architecture direction chosen among real tradeoffs, a secret/credential,
+  external-system access, an approval) → propose **`loop-human`**, and name the **pending decision**. When
+  both a fact and a decision are missing, prefer **needs-human**.
+
+Carry the verdict, the missing facts / pending decision, and the proposed intake label into the Step 3 gate.
 
 ---
 
@@ -175,13 +209,18 @@ Present the full draft to the user:
 - the exact **title / summary**
 - the rendered **body / description**
 - the proposed **labels** (and Jira issue type)
+- the **loop-readiness verdict** (ready / needs-info + the missing facts / needs-human + the pending
+  decision) and, on its own line, the **proposed intake label** (`loop-ready` / `loop-needs-info` /
+  `loop-human`) — so the user consciously approves entry to (or holding out of) the queue
 - if drafted from a plan/FSD: note the **full plan is preserved** in the body (`Plan-Ref:` + a collapsible appendix)
 
 Then ask with `AskUserQuestion`, options: **Create** / **Edit** / **Cancel**.
 
-- **Edit** → apply the requested changes to the draft and re-present this gate.
+- **Edit** → apply the requested changes to the draft and re-present this gate. Editing can also supply the
+  missing facts or record the decision (re-run Step 2.5 — the verdict may become `loop-ready`), or drop the
+  intake label entirely.
 - **Cancel** → stop. Create nothing. Confirm to the user that nothing was filed.
-- **Create** → and only then proceed to Step 4.
+- **Create** → and only then proceed to Step 4 — applying the type label **and** the approved intake label.
 
 > Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-ticket awaiting Create/Edit/Cancel"`
 > before showing this gate (skip silently if the notifier is absent).
@@ -191,7 +230,8 @@ Then ask with `AskUserQuestion`, options: **Create** / **Edit** / **Cancel**.
 - About to run the create command / `createJiraIssue` without an explicit **Create** answer → STOP, show the gate.
 - "The input is obvious, I'll just file it" → NO. Always show the draft and gate first.
 - "The user is clearly in a hurry / said 'just do it'" → NO. The gate is never skipped.
-- About to apply a `loop-*` label → NO. Remove it.
+- About to apply the intake label without an explicit **Create** → NO. It goes in with Create, like every other label.
+- About to apply `loop-in-progress` / `loop-done` / `loop-deferred` → NO. Those are `/skl-do`'s lifecycle states; this skill only ever proposes `loop-ready` / `loop-needs-info` / `loop-human`.
 
 **No exceptions. The ticket is created only after the user selects Create.**
 
@@ -212,7 +252,9 @@ Follow the resolved provider's recipe in **`resources/providers.md`**. In brief:
   ```
 - **Jira** — call the Atlassian MCP `createJiraIssue` with the `cloudId`, `projectKey`, `issueTypeName`,
   `summary` (title), `description` (the drafted Markdown), and any required fields from the create
-  metadata; only labels the user approved (never `loop-*`).
+  metadata; only the labels the user approved in the gate — the type label + the approved intake label
+  (`loop-ready`/`loop-needs-info`/`loop-human`); never the lifecycle labels
+  `loop-in-progress`/`loop-done`/`loop-deferred`.
 
 Report the returned ticket **URL and number/key** back to the user. If creation fails (e.g. an unknown
 label, a missing required Jira field, or a permission error), surface the exact error and offer to retry

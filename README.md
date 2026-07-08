@@ -19,7 +19,8 @@ merges for you:
 2. **Capture** — file it as a ticket on **GitHub / GitLab** with **`/skl-ticket`** — or pass your plan
    or FSD doc (`--plan <path>` / `--fsd <path>`) and it's distilled into the ticket and preserved
    verbatim for `/skl-do` to reuse.
-3. **Human gate → run** — review the ticket, label it **`loop-ready`**, then run
+3. **Human gate → run** — review the ticket and confirm it's **`loop-ready`** (`/skl-ticket` proposes
+   the intake label; you approve it), then run
    **`/skl-do`**. It works that one ticket through the QA-gated build loop, opens a **PR**
    (never merges), and **stops**. You review and **merge** the PR, then re-run `/skl-do`
    for the next ticket.
@@ -28,8 +29,8 @@ merges for you:
 |-------|-------|--------------|
 | **`/skl-init`** | your **tech stack** | **Run once first.** Installs Spec Kit + verifies the QA panel, then authors the **constitution** — web-searching the best-fit code organization for you to choose |
 | **`/skl-telegram`** | your **bot token + chat id** | Sets up Telegram notifications — installs the sender every skl skill calls and stores the two creds in the project-root `.env` (600, git-ignored) via a **no-echo prompt you run** (secrets never enter the chat), then sends a test ping. `test` / `status` sub-commands |
-| **`/skl-ticket`** | a **rough issue**, or a **plan / FSD doc** | Drafts a structured ticket in the repo's house style — from a rough description **or a plan/FSD doc** (`--plan`/`--fsd <path>`: a Claude plan-mode file, a Superpowers plan, or a spec — distilled into the ticket and preserved verbatim for `/skl-do` to reuse) — then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Never applies a `loop-*` label — promoting to `loop-ready` is your decision |
-| **`/skl-do`** | (optional) **`#N`**; `--auto` | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info`) |
+| **`/skl-ticket`** | a **rough issue**, or a **plan / FSD doc** | Drafts a structured ticket in the repo's house style — from a rough description **or a plan/FSD doc** (`--plan`/`--fsd <path>`: a Claude plan-mode file, a Superpowers plan, or a spec — distilled into the ticket and preserved verbatim for `/skl-do` to reuse) — then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Classifies loop-readiness and proposes one **intake label** — `loop-ready` / `loop-needs-info` / `loop-human` — in the gate for you to approve; never the loop's own lifecycle labels |
+| **`/skl-do`** | (optional) **`#N`**; `--auto` | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info` / `loop-human`) |
 | **`/skl-next`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
 | **`/skl-strictness`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
 | **`/skl-update`** | (none) | Pull the latest skl from GitHub and refresh this project's skills + agents (keeps your config) |
@@ -72,8 +73,9 @@ style, shows the full draft, and files it **only after you pick Create** (a Crea
 full plan verbatim** in a collapsible appendix with a `Plan-Ref:` marker — so `/skl-do` reuses your
 planning instead of re-deriving the spec. Auto-detects the provider from the git remote — **GitHub**
 (`gh`), **GitLab** (`glab`, incl. self-hosted), or **Jira** (Atlassian MCP) — asking only when it's
-unsure. It never applies a `loop-*` label: promoting an issue to **`loop-ready`** is a human decision
-(that queue is what `/skl-do` works, one ticket at a time).
+unsure. It classifies loop-readiness and proposes one **intake label** — `loop-ready` / `loop-needs-info`
+/ `loop-human` — in its gate for you to approve (never the loop's lifecycle labels); promoting a held
+ticket to **`loop-ready`** stays a human decision (that queue is what `/skl-do` works, one ticket at a time).
 
 ## `/skl-do` — work one `loop-ready` ticket into a PR
 
@@ -85,8 +87,8 @@ unsure. It never applies a `loop-*` label: promoting an issue to **`loop-ready`*
 The **ticket runner**. With no number it takes the **oldest open issue labeled `loop-ready`**; an
 explicit `#N` works that exact issue (bypassing the label gate). It classifies the ticket
 (bug → framed as a fix, feature → as-is), **readiness-gates it** (an `skl-business-analyst` check — a
-ticket too vague to work is labeled `loop-needs-info` with a comment listing what's missing, instead
-of burning build iterations), builds it through the QA-gated loop it owns — **reusing a plan/FSD the
+ticket too vague to work is labeled `loop-needs-info`, or `loop-human` when it needs a human decision,
+with a comment listing what's missing, instead of burning build iterations), builds it through the QA-gated loop it owns — **reusing a plan/FSD the
 ticket carries** (from `/skl-ticket --plan`/`--fsd`) to seed the spec — (`speckit specify + clarify`
 → a human spec-review gate → `plan → … → implement` → an 8-agent QA panel, max 10 iterations),
 **opens a PR that `Closes` the issue** — pushing a `skl-do/*` branch — and **stops**.
@@ -99,11 +101,13 @@ glance:
 
 ```
 loop-ready ──claim──▶ loop-in-progress ──PR opened──▶ loop-done      (stays open until YOU merge the PR)
- (you set)            (loop working it)  ├──cap hit───▶ loop-deferred  (findings commented, skipped)
-                                         └──not ready─▶ loop-needs-info (missing info commented; you re-label loop-ready)
+ (you set)            (loop working it)  ├──cap hit──────▶ loop-deferred    (findings commented, skipped)
+                                         ├──needs info───▶ loop-needs-info  (missing facts commented; you re-label loop-ready)
+                                         └──needs human──▶ loop-human       (decision commented; you decide, re-label loop-ready)
 ```
 
-A human only ever sets **`loop-ready`**; the loop owns every transition after that. On start-up it
+A human — or `/skl-ticket` via its gate — sets the intake label (**`loop-ready`** / `loop-needs-info` /
+`loop-human`); the loop **builds only `loop-ready`** and owns every transition after the claim. On start-up it
 **resumes** any ticket left on `loop-in-progress` by an interrupted / rate-limited run *before*
 claiming a new `loop-ready` one, so a crash never strands a ticket. (Missing labels are auto-created
 on first run.)
@@ -124,8 +128,8 @@ on first run.)
 The read-only **triage advisor**. Sweeps the project's skl state — issue `loop-*` labels, open
 `skl-do/*` PRs awaiting merge, and setup/housekeeping drift — prints a **current-state snapshot**
 first, then ranks the findings on a fixed **unblock-first ladder**: setup blockers (`/skl-init`) →
-unblock the pipeline (stranded tickets, PRs awaiting merge, `loop-needs-info` answers, deferred
-rescues) → start new work (`loop-ready` queue → `/skl-do`, or file one via
+unblock the pipeline (stranded tickets, PRs awaiting merge, `loop-needs-info` answers, `loop-human`
+decisions, deferred rescues) → start new work (`loop-ready` queue → `/skl-do`, or file one via
 `/skl-ticket`) → housekeeping (`/skl-update`, dirty tree). It names the single next step and
 **offers (human-gated) to run it** — the triage itself changes nothing: no labels, comments,
 branches, or writes. Collectors it can't run (no remote, CLI unauthenticated) are skipped with a reason.

@@ -3,7 +3,8 @@
 > The exact per-provider commands for **selecting one ticket** (resume `loop-in-progress` first, then
 > the oldest `loop-ready`), **claiming** it (`loop-ready` → `loop-in-progress`), **opening the PR/MR** +
 > marking it `loop-done`, **deferring** (`loop-in-progress` → `loop-deferred`) with a findings comment,
-> and **routing to needs-info** (`loop-in-progress` → `loop-needs-info`) with a request-info comment.
+> **routing to needs-info** (`loop-in-progress` → `loop-needs-info`) with a request-info comment, and
+> **routing to needs-human** (`loop-in-progress` → `loop-human`) with a decision-needed comment.
 > SKILL.md sequences these; this file is the source of truth for the commands.
 > Reuse `resources/issue-access.md` if a fetch hits an auth wall. **Never merge** — a human reviews and
 > merges the PR; never apply `loop-ready` yourself (a human curates that queue; restoring it on an
@@ -36,6 +37,7 @@ gh label create loop-in-progress --color fbca04 --description "The loop is worki
 gh label create loop-done        --color 1d76db --description "Loop finished — PR open, awaiting review" 2>/dev/null || true
 gh label create loop-deferred    --color d93f0b --description "Loop couldn't converge — needs a human"   2>/dev/null || true
 gh label create loop-needs-info  --color d4c5f9 --description "Loop needs more info — answer the comment, then re-label loop-ready" 2>/dev/null || true
+gh label create loop-human       --color d876e3 --description "Needs a human decision — decide, then re-label loop-ready" 2>/dev/null || true
 ```
 
 **Poll — resume tier first, then the ready tier** (fetch a small batch each, drop skip-listed ids, take
@@ -86,6 +88,13 @@ gh issue edit <n> --remove-label "loop-in-progress" --add-label "loop-needs-info
 gh issue comment <n> --body-file <temp-request-info-file>
 ```
 
+**On needs-human (readiness gate) — relabel + comment** (an unlabeled `#N` ticket: drop the
+`--remove-label`, keep the `--add-label`):
+```bash
+gh issue edit <n> --remove-label "loop-in-progress" --add-label "loop-human"
+gh issue comment <n> --body-file <temp-decision-file>
+```
+
 ---
 
 ## GitLab (`glab`)
@@ -100,6 +109,7 @@ uses `GITLAB_HOST=<host>`). If missing/unauth → `brew install glab`, `! glab a
 [GITLAB_HOST=<host>] glab label create --name loop-done        --color '#1d76db' --description "Loop finished — MR open, awaiting review" 2>/dev/null || true
 [GITLAB_HOST=<host>] glab label create --name loop-deferred    --color '#d93f0b' --description "Loop couldn't converge — needs a human"   2>/dev/null || true
 [GITLAB_HOST=<host>] glab label create --name loop-needs-info  --color '#d4c5f9' --description "Loop needs more info — answer the comment, then re-label loop-ready" 2>/dev/null || true
+[GITLAB_HOST=<host>] glab label create --name loop-human       --color '#d876e3' --description "Needs a human decision — decide, then re-label loop-ready" 2>/dev/null || true
 ```
 
 **Poll — resume tier first, then the ready tier.** The API is the most reliable JSON source:
@@ -148,6 +158,13 @@ merge-when-pipeline-succeeds: a human reviews and merges the MR.
 ```bash
 [GITLAB_HOST=<host>] glab issue update <iid> --unlabel "loop-in-progress" --label "loop-needs-info"
 [GITLAB_HOST=<host>] glab issue note <iid> --message "$(cat <temp-request-info-file>)"
+```
+
+**On needs-human (readiness gate) — relabel + comment** (an unlabeled `#N` ticket: drop the
+`--unlabel`, keep the `--label`):
+```bash
+[GITLAB_HOST=<host>] glab issue update <iid> --unlabel "loop-in-progress" --label "loop-human"
+[GITLAB_HOST=<host>] glab issue note <iid> --message "$(cat <temp-decision-file>)"
 ```
 
 ---
