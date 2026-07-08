@@ -4,6 +4,24 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 2.3.0 — 2026-07-08
+
+- **`/skl-ticket` classifies loop-readiness at creation.** After drafting, it self-assesses the ticket
+  against skl's shared readiness rubric and **proposes one intake label** in the existing Create/Edit/Cancel
+  gate — you still approve it, so the human gate is intact (no auto-apply). It never touches the loop's own
+  lifecycle labels (`loop-in-progress`/`loop-done`/`loop-deferred`).
+- **New `loop-human` label** (config key `pickup_human_label`) for a ticket that needs a **human
+  decision/action** the loop can't make — a design/architecture direction, a secret/credential, external
+  access, an approval — as distinct from `loop-needs-info` (just missing *facts*). The label is a
+  first-class citizen: auto-created in the tracker, driven by `/skl-do`, and surfaced by `/skl-next`.
+- **The readiness rubric is now three-way** (`ready` / `needs-info` / `needs-human`), shared by
+  `/skl-ticket` (at creation) and `/skl-do`'s readiness gate (at pickup, via `skl-business-analyst`). A
+  ticket that reaches the loop but needs a human decision is routed to `loop-human` with a comment instead
+  of being built blindly.
+- **`/skl-next`** sweeps and triages `loop-human` issues (T1 — *make the decision, then re-label
+  `loop-ready`*). `/skl-do` still builds only `loop-ready`; `loop-human`/`loop-needs-info` are held for a
+  human.
+
 ## 2.2.0 — 2026-07-07
 
 - **New `/skl-telegram`.** Sets up Telegram notifications end-to-end — installs the

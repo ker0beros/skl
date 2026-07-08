@@ -37,7 +37,7 @@ gh issue create \
   --repo <owner/repo> \            # or <host>/owner/repo for Enterprise
   --title "<title>" \
   --body-file <path-to-temp-body-file> \
-  [--label <label>]                # only labels the user approved; never loop-*
+  [--label <label>]                # approved labels only: type + intake (loop-ready|loop-needs-info|loop-human); never loop-in-progress/loop-done/loop-deferred
 ```
 On success `gh` prints the issue URL — report it. If it fails on an **unknown label**, offer to retry
 without `--label` (or create the label first only if the user asks). If a flag errors, run
@@ -63,7 +63,7 @@ without `--label` (or create the label first only if the user asks). If a flag e
   --repo <owner/repo> \            # nested groups: group/subgroup/repo
   --title "<title>" \
   --description "$(cat <path-to-temp-body-file>)" \
-  [--label "<comma,separated,labels>"] \   # only approved labels; never loop-*
+  [--label "<comma,separated,labels>"] \   # approved only: type + intake (loop-ready|loop-needs-info|loop-human); never loop-in-progress/loop-done/loop-deferred
   --yes
 ```
 On success `glab` prints the issue URL — report it. If a flag differs on the installed version, run
@@ -107,7 +107,9 @@ Call `createJiraIssue` with:
 - `issueTypeName` — the resolved issue type (e.g. `Bug`, `Story`, `Task`)
 - `summary` — the drafted **title**
 - `description` — the drafted **body** (the Markdown sections from SKILL Step 2)
-- any **required fields** from step 4; labels only if the user approved them (never `loop-*`)
+- any **required fields** from step 4; only the labels the user approved — the type label + the intake
+  label (`loop-ready`/`loop-needs-info`/`loop-human`); never the lifecycle labels
+  `loop-in-progress`/`loop-done`/`loop-deferred`
 
 Report the returned issue **key** and **browse URL** (e.g. `https://<site>.atlassian.net/browse/PROJ-123`).
 If `createJiraIssue` fails (missing required field, invalid issue type, no permission), surface the exact

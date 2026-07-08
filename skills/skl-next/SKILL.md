@@ -5,7 +5,7 @@ argument-hint: "(none) — every run is a full sweep"
 compatibility: "Richest with a GitHub/GitLab remote + its CLI authenticated (gh / glab — they power the issue + PR collectors); without them it degrades gracefully and still triages local state. Reuses skl-do/resources/pickup-loop.md for provider/host/auth resolution and skl-do/resources/issue-access.md if a fetch hits an auth wall."
 metadata:
   author: "khairul"
-  version: "1.0.0"
+  version: "1.1.0"
   source: "skills/skl-next"
 user-invocable: true
 disable-model-invocation: true
@@ -48,7 +48,7 @@ findings, not an error.
 2. **Issues** — needs a GitHub/GitLab remote + authenticated CLI; resolve provider / host / auth
    per `.claude/skills/skl-do/resources/pickup-loop.md` (no remote or unauthenticated →
    skip with reason). Per lifecycle label — `loop-in-progress`, `loop-done`, `loop-needs-info`,
-   `loop-deferred`, `loop-ready` — fetch count + oldest, plus the unlabeled-open count:
+   `loop-human`, `loop-deferred`, `loop-ready` — fetch count + oldest, plus the unlabeled-open count:
 
    ```bash
    # GitHub — for each label L above:
@@ -96,7 +96,8 @@ agent spawn, no judgment calls beyond this ladder.
   1. **Stranded `loop-in-progress`** → resume **`/skl-do`** (its resume tier re-picks it).
   2. **`loop-done` issues / open `skl-do/*` PRs** → *review & merge the PR* (**human** — link it).
   3. **`loop-needs-info` issues** → *answer the comment, remove the label, re-add `loop-ready`* (human).
-  4. **`loop-deferred` issues** → *human rescue: read the commented findings, fix or re-scope*.
+  4. **`loop-human` issues** → *make the decision / grant the missing access, record it, re-add `loop-ready`* (human).
+  5. **`loop-deferred` issues** → *human rescue: read the commented findings, fix or re-scope*.
 - **T2 — Start new work** (in this order):
   1. Non-empty `loop-ready` queue → **`/skl-do`** (works the oldest one into a PR, then stops).
   2. Unlabeled open issues → *curate: promote workable ones to `loop-ready`* (human), or file new
@@ -123,8 +124,9 @@ action). Shape (values are examples):
 
 ## Issues (loop-* lifecycle)
 - loop-ready: 2 (oldest #14, 3d)         - loop-needs-info: 1 — #17 (awaiting your answers)
-- loop-in-progress: 1 — #12 ⚠ stranded   - loop-deferred: 0
-- loop-done: 1 — #9 (PR #31 open)        - unlabeled open: 4
+- loop-in-progress: 1 — #12 ⚠ stranded   - loop-human: 1 — #19 (awaiting your decision)
+- loop-done: 1 — #9 (PR #31 open)        - loop-deferred: 0
+- unlabeled open: 4
 
 ## Open PRs
 - open skl-pickup PRs: 1 — #31 (closes #9, awaiting your review + merge)
@@ -138,9 +140,10 @@ action). Shape (values are examples):
 1. [T1] ⚠ #12 is stranded on loop-in-progress → /skl-do (resumes it first)
 2. [T1] Review & merge PR #31 (closes #9, loop-done) — human: <url>
 3. [T1] Answer #17's needs-info comment, re-label loop-ready — human: <url>
-4. [T2] 2 loop-ready tickets → /skl-do (works the oldest, then stops)
-5. [T2] Curate 4 unlabeled issues — promote workable ones to loop-ready — human
-6. [T3] Update skl 1.3.0 → 2.0.0 → /skl-update
+4. [T1] Decide #19's loop-human question, record it, re-label loop-ready — human: <url>
+5. [T2] 2 loop-ready tickets → /skl-do (works the oldest, then stops)
+6. [T2] Curate 4 unlabeled issues — promote workable ones to loop-ready — human
+7. [T3] Update skl 1.3.0 → 2.0.0 → /skl-update
 
 Next step: /skl-do — #12 was claimed but no run is working it; resuming it frees the
 oldest in-flight work before anything new starts.

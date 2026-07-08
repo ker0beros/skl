@@ -85,5 +85,6 @@ would exceed the limit (or is clearly huge), **do not truncate** — tell the us
 
 ## Reminder
 
-The Create/Edit/Cancel gate (SKILL Step 3) and the **never apply `loop-*`** rule are unchanged — a plan
-source changes only the *body*, never the gate or the labels.
+The Create/Edit/Cancel gate (SKILL Step 3), the loop-readiness analysis (Step 2.5), and the intake-label
+rules are unchanged — a plan source changes only the *body*, never the gate or the labels. A plan-sourced
+ticket is still classified `loop-ready` / `loop-needs-info` / `loop-human` and gated like any other.

@@ -10,6 +10,16 @@ surface_default: mobile        # one of: web | mobile | both | auto
 playwright: absent             # present | absent  (web design-ref rendering + web parity need Playwright)
 gate_strictness: standard      # low = 0 Crit/High/Med (Low+Info logged) | standard = also 0 Low (Info logged) | strict = also 0 Info (info-level lints). Toggle with /skl-strictness
 
+## Pickup labels — the issue-lifecycle labels /skl-do drives and /skl-ticket proposes (override only to rename).
+# Defaults shown; omit any line to keep the default. /skl-do builds only pickup_label tickets; the two
+# "held" labels (needs-info / human) are resolved by a human (answer / decide), who then re-labels pickup_label.
+pickup_label:            loop-ready        # eligible for the autonomous build loop
+pickup_inprogress_label: loop-in-progress  # the loop is working this ticket (also the resume signal)
+pickup_done_label:       loop-done         # PR open, awaiting your review + merge
+pickup_deferred_label:   loop-deferred     # loop couldn't converge in the cap — needs a human
+pickup_needsinfo_label:  loop-needs-info   # missing facts — answer the comment, then re-label loop-ready
+pickup_human_label:      loop-human        # needs a human decision/action — decide, then re-label loop-ready
+
 ## Automated gate commands — Phase B step 10. Every listed command must exit 0.
 mobile_gates:
   - make analyze

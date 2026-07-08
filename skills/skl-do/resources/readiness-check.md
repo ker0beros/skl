@@ -1,10 +1,12 @@
-# Ticket-readiness check for `/skl-do` (Phase 0 step 6)
+# Ticket-readiness check (shared: `/skl-do` Phase 0 step 6 · `/skl-ticket` Step 2.5)
 
-> Runs after classify (Phase 0 step 5), before the build (Phase A). The driver spawns `skl-business-analyst`
-> with the seed below; the agent reports per-item findings + a `READINESS:` verdict; the **driver**
-> routes (proceed / ask the human / `loop-needs-info`). Rationale: a vague ticket must cost one
-> comment, not 10 QA-gated iterations — this is the constitution's Loop Engineering
-> readiness-scoring principle applied at the queue boundary.
+> In `/skl-do` this runs after classify (Phase 0 step 5), before the build (Phase A): the driver spawns
+> `skl-business-analyst` with the seed below; the agent reports per-item findings + a `READINESS:` verdict;
+> the **driver** routes (proceed / `loop-needs-info` / `loop-human`). `/skl-ticket` reuses the same
+> **standard + rubric + three-way verdict** at creation time to pre-select the intake label it proposes in
+> its gate (it self-assesses the draft — no agent spawn). Rationale: a vague ticket must cost one comment,
+> not 10 QA-gated iterations — the constitution's Loop Engineering readiness-scoring principle applied at
+> the queue boundary.
 
 ## The standard (calibration)
 
@@ -13,6 +15,18 @@ reporter anything?** An item is **missing** ONLY when it can't be reliably infer
 issue (title + body + labels + comments) **plus the repo**. Template fields are NOT required —
 terse is fine when the repo fills the gaps ("fix typo in README heading" is ready). The gate
 stops wasted iterations; it does not bounce workable tickets for form.
+
+**Three outcomes.** The verdict is exactly one of:
+- **ready** — every rubric item below is present or inferable; the loop can build it unattended.
+- **needs-info** — an *information* gap: a rubric item is missing but is a **fact the reporter can just
+  supply** (a repro path, the expected behavior, an acceptance criterion). Answerable → then ready.
+- **needs-human** — a *decision* gap: the ticket needs a **human judgment or out-of-band action the loop
+  cannot make**, even when fully described — a design/UX/architecture direction chosen among real
+  tradeoffs, a secret/credential, access to an external system, or an explicit approval. More facts won't
+  unblock it; a human must decide or act.
+
+Discriminator: *needs-info is answered with facts; needs-human requires a call or an action.* When both
+apply, prefer **needs-human** (the decision dominates).
 
 ## Rubric
 
@@ -47,10 +61,15 @@ Labels: <labels>
 --- comments ---
 <comments or "(none)">
 
-Return: per-item status (present / inferred — say from where / missing), a draft request-info
-comment (only if anything is missing; template in
-.claude/skills/skl-do/resources/readiness-check.md), and the mandatory last line:
-`READINESS: ready` or `READINESS: not-ready — missing: <item>; <item>`.
+Also flag whether the ticket needs a **human decision/action** the loop can't make (design/architecture
+tradeoff, secret/credential, external access, approval) — that is `needs-human`, not `needs-info`.
+
+Return: per-item status (present / inferred — say from where / missing), a draft comment when anything is
+missing or a decision is needed (only then; templates in
+.claude/skills/skl-do/resources/readiness-check.md), and the mandatory last line — exactly one of:
+`READINESS: ready`
+`READINESS: needs-info — missing: <item>; <item>`
+`READINESS: needs-human — decision: <item>; <item>`
 ```
 
 ## Request-info comment template (posted on the needs-info route)
@@ -66,22 +85,47 @@ Once the description is updated: remove the `loop-needs-info` label and re-add `
 then re-run `/skl-do` to work it.
 ```
 
+## Decision-needed comment template (posted on the needs-human route)
+
+```md
+🤖 **skl-do — needs a human decision.** This ticket can't be built unattended: it needs a call the
+loop shouldn't make on its own —
+
+- **<decision/action>** — <what must be decided or provided, e.g. "which onboarding layout to ship", "a
+  staging API key", "confirm we may drop the legacy column">
+
+Once decided: capture the decision here (or in the ticket body), remove `loop-human`, re-add
+`loop-ready` — then re-run `/skl-do` to build it.
+```
+
 ## Routing (driver-owned — the agent only reports)
 
 - **`READINESS: ready`** → Phase A (build the ticket). No comment, no label change.
-- **`not-ready` + `--auto`** →
+- **`needs-info` + `--auto`** →
   1. flip `pickup_inprogress_label` → `pickup_needsinfo_label` (commands in `pickup-loop.md`);
   2. post the request-info comment (the agent's draft, driver-reviewed);
   3. record the result as `needs-info` and clear the in-flight ticket;
   4. `bash ~/.claude/notify-telegram.sh "[<project>] /skl-do ⏸ #<n> needs info — labeled loop-needs-info"`;
   5. then **STOP** (one ticket per run — a human answers the comment and re-labels `loop-ready`, then re-runs).
-- **`not-ready`, interactive (no `--auto`)** → fire the await ping, then `AskUserQuestion`
+- **`needs-info`, interactive (no `--auto`)** → fire the await ping, then `AskUserQuestion`
   listing the missing items, options:
   - **Answer now** → post the user's answers as an issue comment (the durable record), seed
     them into the build, → Phase A.
   - **Route to needs-info** → the `--auto` path above.
   - **Skip this ticket** → flip `pickup_inprogress_label` back to `pickup_label` (a future run
     can claim it), clear the in-flight ticket, then **STOP**.
+- **`needs-human` + `--auto`** → same shape, one hop over: flip `pickup_inprogress_label` →
+  `pickup_human_label`, post the **decision-needed** comment (the agent's draft, driver-reviewed), record
+  the result as `needs-human` and clear the in-flight ticket,
+  `bash ~/.claude/notify-telegram.sh "[<project>] /skl-do ⏸ #<n> needs a human decision — labeled loop-human"`,
+  then **STOP** (a human decides, re-labels `loop-ready`, re-runs).
+- **`needs-human`, interactive (no `--auto`)** → fire the await ping, then `AskUserQuestion`
+  listing the pending decisions, options:
+  - **Decide now** → post the decision as an issue comment (the durable record), seed it into the
+    build, → Phase A.
+  - **Route to loop-human** → the `--auto` path above.
+  - **Skip this ticket** → flip `pickup_inprogress_label` back to `pickup_label`, clear the in-flight
+    ticket, then **STOP**.
 - **`#N` tickets may carry no lifecycle label** (an explicit number bypasses the gate) — use
   add-only labeling and tolerate a failed remove (`--remove-label` on an absent label is not an
   error worth stopping for).
