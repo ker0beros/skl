@@ -10,10 +10,9 @@
 #   1. $PWD/.env                       (the project you're running in — /skl-telegram writes here)
 #   2. ~/.config/claude/.env           (optional global fallback — cross-dir / local cron)
 #   3. ~/.config/claude/telegram.env   (legacy standalone)
-#   4. ~/Documents/ResidenC/.env       (legacy fallback)
 # Each must define TELEGRAM_API_TOKEN and TELEGRAM_CHAT_ID.
 set -a
-for _f in "$PWD/.env" "$HOME/.config/claude/.env" "$HOME/.config/claude/telegram.env" "$HOME/Documents/ResidenC/.env"; do
+for _f in "$PWD/.env" "$HOME/.config/claude/.env" "$HOME/.config/claude/telegram.env"; do
   if [ -f "$_f" ]; then
     # shellcheck disable=SC1090
     source "$_f"
