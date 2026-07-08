@@ -232,7 +232,7 @@ intent + clarify answers text-only — plus the `/skl-do` readiness gate).
 ## Install
 
 Installation **pulls the repo from GitHub** and copies the skills + agents into your project's
-`.claude/` — there is no install script. Uses your existing git/GitHub auth (the repo is private). From
+`.claude/` — there is no install script. A plain `git clone` works (public repo); `gh` is used only if present. From
 **inside the target project**:
 
 ```bash
