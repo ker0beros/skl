@@ -59,10 +59,11 @@ and reads `.skl-do/state.md` to pick up at the checkpointed `phase` / `iteration
    - `0 < wait ≤ 3600` → `ScheduleWakeup(delaySeconds = max(60, wait), prompt = "/skl-resume <same args>", reason = "resume /skl-do at usage-limit reset + buffer")`, then **end the turn**.
    - `wait > 3600` → `ScheduleWakeup(delaySeconds = 3600, prompt = "/skl-resume <same args>", reason = "heartbeat toward usage-limit reset for /skl-do")`, then **end the turn** (re-arms hourly until within range).
    On the **first** arm, fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-resume armed — resuming /skl-do ~<resume_at>"`.
-5. **Continue.** Re-invoke **`/skl-do <same flags from the checkpoint>`** via the **Skill tool** (pass the
-   `Flags:` recorded in `.skl-do/state.md`, e.g. `--auto`). `/skl-do` re-reads `.skl-do/state.md` + the
-   `loop-in-progress` label and continues the **same** ticket from its checkpointed `phase` / `iteration`
-   / `last_step` — it does not restart the ticket. Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-resume ▶ continuing /skl-do #<n> (<phase> iter <iteration>)"`.
+5. **Continue.** Re-invoke **`/skl-do`** via the **Skill tool** (no flags needed). `/skl-do` re-reads
+   `.skl-do/state.md` + the `loop-in-progress` label and continues the **same** ticket from its
+   checkpointed `phase` / `iteration` / `last_step` — it does not restart the ticket. The recorded
+   `Unattended:` value in the checkpoint restores the run mode (a cloud run resumes unattended even if
+   the env var is not re-exported). Fire `bash ~/.claude/notify-telegram.sh "[<project>] /skl-resume ▶ continuing /skl-do #<n> (<phase> iter <iteration>)"`.
 
 ---
 
