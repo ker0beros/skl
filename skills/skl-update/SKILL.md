@@ -110,8 +110,9 @@ It does **not** touch Spec Kit / the `speckit-*` skills, your
   your preserved configs) — **including removals**: an `skl-*` skill deleted upstream is pruned
   locally. The prune is guarded (runs only when the cache lists ≥ 1 skill) and scoped to the `skl-*`
   namespace; agents are additive-only and never pruned.
-- **Private repo over your own auth.** First clone uses `gh`; later updates use `git fetch`. On an
-  auth/network failure, surface the real error — don't fall back to a stale or guessed source.
+- **Clone/pull over git.** First clone uses `gh` if present, else `git clone` (public repo — no auth
+  needed); later updates use `git fetch`. On an auth/network failure, surface the real error — don't
+  fall back to a stale or guessed source.
 - **Idempotent.** If already at `origin/main`, it's a no-op that reports "up to date".
 - **Reload required** for the new skill versions to take effect in Claude Code.
 - **Telegram** prefix `[<project>]` (project root basename); skip silently if `~/.claude/notify-telegram.sh` is absent.
