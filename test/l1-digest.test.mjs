@@ -35,6 +35,10 @@ test('empty label buckets do not affect the hash', () => {
   );
 });
 
+test('hash is 12 lowercase hex chars', () => {
+  assert.match(hash(base), /^[0-9a-f]{12}$/);
+});
+
 test('render embeds the exact hash marker', () => {
   const h = hash(base);
   assert.match(render(base, h), new RegExp(`<!-- skl-l1:${h} -->$`));

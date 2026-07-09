@@ -1,7 +1,9 @@
 # /skl-next --post — L1 report-only digest
 
-Publish a deduped triage digest to one rolling thread. Report-only: the ONLY write is to this
-thread. Requires `node` + an authenticated `gh`/`glab`. Gated by `l1_digest.enabled`.
+Publish a deduped triage digest to one rolling thread. Report-only: it writes only to
+establish/maintain its own digest thread (append a comment on change; on the labeled-issue path
+also create its `skl-l1-digest` label and cache the thread number in local config) — nothing else.
+Requires `node` + an authenticated `gh`/`glab`. Gated by `l1_digest.enabled`.
 
 ## 0. Guard
 Read `l1_digest.*` from this skill's `resources/project.config.md` (defaults if absent).
@@ -25,13 +27,17 @@ BODY=$(printf '%s' "$DIGEST" | jq -r .body)
 ```
 
 ## 3. Dry-run (`--dry-run`)
-Read the rolling thread's last hash (§Destination in Task 4). Print:
+Resolve the thread **read-only — find only, never create**: if `l1_digest.thread_ref` is set in
+config, use it directly; else search for an existing thread by the `<!-- skl-l1-thread -->` marker
+(the search half of §Destination). **Do not run any create step** — no `createDiscussion`, no
+`gh issue create`, no `glab … POST … issues`, and no comment/note POST. If no thread is found (first
+run), there is nothing to create and nothing to read: treat `LAST_HASH` as `none`. Print:
 ```
 L1 digest (dry-run) — hash <HASH>, last <LAST_HASH|none>
 → would POST (changed)      # or: would SKIP (unchanged)
 <BODY>
 ```
-Then STOP. No writes.
+Then STOP. Write nothing.
 
 ## Destination — resolve + find-or-create the rolling thread
 `destination: auto` → GitHub with Discussions enabled uses a **Discussion**; otherwise a **labeled

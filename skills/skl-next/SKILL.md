@@ -189,9 +189,11 @@ thread — see the invariant below.
 - **Strictly read-only triage.** The triage never applies labels, posts comments, creates
   branches, pushes, or writes files. Only the user's explicit pick starts a skill — and that
   skill owns its own changes and gates.
-- **`--post` is the one bounded exception.** It writes to NOTHING but its own rolling digest
-  thread (create once, append on change). No labels, PR comments, branches, or writes to any
-  ticket. That single, declared side-effect is what keeps `--post` at L1 (report-only), not L2.
+- **`--post` is a bounded exception.** It writes only to establish and maintain its own digest
+  thread — create the thread, append a comment on change, and (on the labeled-issue path) create
+  its own `skl-l1-digest` label and cache the thread number in local config. It never writes to
+  any other issue, PR, or branch. That declared, self-scoped side-effect is what keeps `--post`
+  at L1 (report-only), not L2.
 - **Deterministic ranking.** The ladder is the whole policy: same state in → same recommendation
   out. No BA-agent scoring, no per-run judgment calls.
 - **Failure-tolerant.** Any collector may be skipped with a reason; the triage runs on whatever

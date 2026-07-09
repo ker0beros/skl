@@ -177,8 +177,9 @@ branches, or writes. Collectors it can't run (no remote, CLI unauthenticated) ar
 #### L1 report-only digest (`/skl-next --post`)
 skl's concrete **L1 (report-only)** surface. Enable Discussions on the repo, set `l1_digest.enabled:
 true`, then schedule a **Claude cloud routine** (`/schedule`) to run `/skl-next --post` daily. It
-posts a deduped digest to a rolling "skl · L1 daily triage" Discussion — a new comment only when
-something changed — and pings Telegram once on each post. It takes no actions (that's L2/L3).
+posts a deduped digest to a rolling "skl · L1 daily triage" Discussion (on GitLab, or when
+Discussions are disabled, it uses a labeled `skl-l1-digest` issue instead) — a new comment only
+when something changed — and pings Telegram once on each post. It takes no actions (that's L2/L3).
 
 ## `/skl-strictness` — how strict the QA gates are
 
