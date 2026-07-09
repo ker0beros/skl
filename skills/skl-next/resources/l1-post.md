@@ -102,3 +102,8 @@ gh api graphql -f query='mutation($d:ID!,$b:String!){addDiscussionComment(input:
 Persist `l1_digest.thread_ref: <NUM|IID>` in `project.config.md` if not already set.
 (Pinning the thread is an optional one-time cosmetic step via the web UI — discovery is by the
 `<!-- skl-l1-thread -->` marker, so pinning is not required.)
+
+## Nudge (only on a new post)
+`l1_digest.telegram_nudge` not false → after a successful append:
+  bash ~/.claude/notify-telegram.sh "[<project>] L1 digest updated → <comment_url>"
+Silent on `no change` / dry-run / disabled. If the notifier is absent it no-ops — never an error.
