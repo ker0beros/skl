@@ -52,3 +52,10 @@ device_logical_size:
 # - web parity:    render-keyframes.mjs — WEB-ONLY, needs Playwright (resources/render-keyframes.mjs)
 # - mobile parity: the mobile_render recipe above — Mobile MCP, default iOS (resources/mobile-render.md)
 # - design ref:    Playwright render when present; else Mobile MCP / user-provided PNGs under specs/<feature>/references/
+
+## L1 digest — report-only daily triage (/skl-next --post). Optional; absent/enabled:false = no-op.
+l1_digest.enabled:             false        # true to allow /skl-next --post to publish
+l1_digest.destination:         auto         # auto | github-discussion | issue
+l1_digest.discussion_category: General      # GitHub Discussions category (when destination resolves to discussion)
+l1_digest.telegram_nudge:      true         # one-line ping on a new post (only)
+l1_digest.thread_ref:                        # cached discussion/issue number — auto-filled on first post
