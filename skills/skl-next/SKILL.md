@@ -1,11 +1,11 @@
 ---
 name: skl-next
 description: "Answer \"what should I do now?\" — the read-only triage advisor. Sweeps the project's skl state — issue loop-* lifecycle labels, open skl-do/* PRs, and setup/housekeeping drift — prints a CURRENT-STATE snapshot first, then ranks the findings on a fixed unblock-first ladder (setup blockers → unblock the pipeline → start new work → housekeeping), names the SINGLE next step, and offers (human-gated) to run it via the Skill tool. The triage itself changes nothing: no labels, no comments, no branches, no pushes, no file writes. Collectors that can't run (no remote, CLI unauthenticated, no specs/) are skipped with a reason — never an abort."
-argument-hint: "(none) — every run is a full sweep"
+argument-hint: "(none) — full sweep. `--post` publishes a deduped L1 digest to a Discussion (report-only); add `--dry-run` to preview without posting."
 compatibility: "Richest with a GitHub/GitLab remote + its CLI authenticated (gh / glab — they power the issue + PR collectors); without them it degrades gracefully and still triages local state. Reuses skl-do/resources/pickup-loop.md for provider/host/auth resolution and skl-do/resources/issue-access.md if a fetch hits an auth wall."
 metadata:
   author: "khairul"
-  version: "1.1.0"
+  version: "1.2.0"
   source: "skills/skl-next"
 user-invocable: true
 disable-model-invocation: true
@@ -17,7 +17,9 @@ disable-model-invocation: true
 $ARGUMENTS
 ```
 
-No arguments are expected — every run is a full sweep. Ignore any input.
+Interactive default: no arguments — a full sweep (Phases 1–4). Two report-only flags:
+- `--post` — after the sweep + ladder, publish a deduped digest per `resources/l1-post.md` instead of the interactive offer. Implies unattended (no prompts).
+- `--post --dry-run` — render the digest + hash and print would-post/would-skip; write nothing.
 
 ---
 
@@ -171,11 +173,25 @@ oldest in-flight work before anything new starts.
 
 ---
 
+## Phase 4′ — Posting mode (`--post`, report-only)
+
+When invoked with `--post`, skip Phase 4's interactive offer. Reuse Phase 1 (sweep) + Phase 2
+(ladder) to build the state, then follow **`resources/l1-post.md`**: compute the digest hash,
+compare to the rolling thread's last posted hash, and append a dated comment **only if it
+changed** (silent otherwise). `--dry-run` stops before any write and prints the digest + decision.
+This is the sole path in this skill that writes anything, and it writes only to its own digest
+thread — see the invariant below.
+
+---
+
 ## Rules & invariants
 
 - **Strictly read-only triage.** The triage never applies labels, posts comments, creates
   branches, pushes, or writes files. Only the user's explicit pick starts a skill — and that
   skill owns its own changes and gates.
+- **`--post` is the one bounded exception.** It writes to NOTHING but its own rolling digest
+  thread (create once, append on change). No labels, PR comments, branches, or writes to any
+  ticket. That single, declared side-effect is what keeps `--post` at L1 (report-only), not L2.
 - **Deterministic ranking.** The ladder is the whole policy: same state in → same recommendation
   out. No BA-agent scoring, no per-run judgment calls.
 - **Failure-tolerant.** Any collector may be skipped with a reason; the triage runs on whatever
