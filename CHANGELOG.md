@@ -4,6 +4,18 @@ All notable changes to skl, newest first. Every change to `skills/` or `agents/`
 on `main` bumps `VERSION` and adds a section here — see `CLAUDE.md` for the rule.
 `/skl-update` prints the sections newer than your installed version.
 
+## 2.5.0 — 2026-07-09
+
+- **New `/skl-next --post` (L1 report-only digest).** skl's own L1 surface: after the normal
+  sweep + ladder, publish a **deduped** triage digest to a rolling Discussion (GitHub) or labeled
+  issue (GitLab) — a new comment only when state changed, silent otherwise. `--dry-run` previews
+  without posting. Strictly report-only: the sole write is to its own digest thread. Fires a
+  one-line Telegram nudge on a new post. Schedule it daily via a Claude cloud routine.
+- Config: an `l1_digest.*` block in `project.config.md` (enabled/destination/category/nudge),
+  preserved across `/skl-update`. It's part of the template only for **fresh `/skl-init`** installs —
+  an existing project that upgrades via `/skl-update` keeps its current `project.config.md` as-is
+  (never regenerated), so on upgrade the block is **opt-in**: hand-add it to enable `--post`.
+
 ## 2.4.0 — 2026-07-08
 
 - **`/skl-do --auto` is removed** — unattended (zero-prompt) builds are now driven by the environment,

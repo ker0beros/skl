@@ -49,7 +49,7 @@ merges for you:
 | **`/skl-telegram`** | your **bot token + chat id** | Sets up Telegram notifications — installs the sender every skl skill calls and stores the two creds in the project-root `.env` (600, git-ignored) via a **no-echo prompt you run** (secrets never enter the chat), then sends a test ping. `test` / `status` sub-commands |
 | **`/skl-ticket`** | a **rough issue**, or a **plan / FSD doc** | Drafts a structured ticket in the repo's house style — from a rough description **or a plan/FSD doc** (`--plan`/`--fsd <path>`: a Claude plan-mode file, a Superpowers plan, or a spec — distilled into the ticket and preserved verbatim for `/skl-do` to reuse) — then after a **Create/Edit/Cancel** gate files it on **GitHub / GitLab / Jira** (auto-detects the provider from the git remote). Classifies loop-readiness and proposes one **intake label** — `loop-ready` / `loop-needs-info` / `loop-human` — in the gate for you to approve; never the loop's own lifecycle labels |
 | **`/skl-do`** | (optional) **`#N`** | Works **one** ticket, then stops. With no number it takes the **oldest** open `loop-ready` issue (or `#N` for that exact one), classifies + readiness-gates it, builds it through the QA-gated loop it owns (`specify → … → implement` + an 8-agent QA panel, max 10 iterations), and **opens a PR that `Closes` it — never merging**. You review + merge the PR, then re-run for the next. Drives a label lifecycle: `loop-ready → loop-in-progress → loop-done` (or `loop-deferred` / `loop-needs-info` / `loop-human`) |
-| **`/skl-next`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it |
+| **`/skl-next`** | (none) | Read-only **triage advisor** — sweeps issues / PRs / config, prints the **current state**, then recommends the **single next step** on an unblock-first ladder and offers (human-gated) to run it. `--post` (`--dry-run` to preview) publishes a deduped **L1 report-only digest** to a rolling Discussion/issue |
 | **`/skl-strictness`** | `strict` \| `standard` \| `low` | 3-stop slider (like `/effort`) for how strict the QA gates are — how far below Medium also blocks (Low / Info) |
 | **`/skl-update`** | (none) | Pull the latest skl from GitHub and refresh this project's skills + agents (keeps your config) |
 | **`/skl-resume`** | (optional) reset time | Continue the last `/skl-do` run after an interruption — a usage-limit reset, a crash, or a context `/clear` — from its durable checkpoint |
@@ -174,6 +174,12 @@ decisions, deferred rescues) → start new work (`loop-ready` queue → `/skl-do
 **offers (human-gated) to run it** — the triage itself changes nothing: no labels, comments,
 branches, or writes. Collectors it can't run (no remote, CLI unauthenticated) are skipped with a reason.
 
+#### L1 report-only digest (`/skl-next --post`)
+skl's concrete **L1 (report-only)** surface. Enable Discussions on the repo, set `l1_digest.enabled:
+true`, then schedule a **Claude cloud routine** (`/schedule`) to run `/skl-next --post` daily. It
+posts a deduped digest to a rolling "skl · L1 daily triage" Discussion — a new comment only when
+something changed — and pings Telegram once on each post. It takes no actions (that's L2/L3).
+
 ## `/skl-strictness` — how strict the QA gates are
 
 ```
@@ -228,7 +234,7 @@ skills/skl-init/     # SKILL.md + resources/ (code-org playbook) — one-time se
 skills/skl-telegram/  # SKILL.md + resources/ (notify-telegram.sh sender) — set up Telegram notifications (creds in project .env)
 skills/skl-ticket/  # SKILL.md + resources/ (providers) — file a ticket on GitHub/GitLab/Jira
 skills/skl-do/  # SKILL.md + resources/ (pickup-loop + state template + readiness-check + issue-access + pass-matrix + render-keyframes.mjs + mobile-render + no-overflow-testing + templates + config example) — build one loop-ready ticket → PR, then stop
-skills/skl-next/  # SKILL.md — read-only triage advisor: current-state snapshot → unblock-first next step + offer
+skills/skl-next/  # SKILL.md + resources/ (l1-digest.mjs, l1-post.md) — read-only triage advisor: current-state snapshot → unblock-first next step + offer; --post publishes an L1 report-only digest
 skills/skl-strictness/     # SKILL.md — strict|standard|low QA-gate slider (sets gate_strictness)
 skills/skl-update/   # SKILL.md — pull latest from GitHub + re-install (keeps project.config.md)
 skills/skl-resume/   # SKILL.md — continue the last run from its checkpoint (usage cap / crash / /clear)
