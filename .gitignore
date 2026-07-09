@@ -6,6 +6,10 @@ skills/*/resources/package.json
 # generated per-project config (created at install time in the TARGET, never in this repo)
 skills/*/resources/project.config.md
 
+# Superpowers authoring artifacts — design specs + implementation plans are
+# local dev docs, kept OUT of the public tree (see the 2026-07 public release)
+docs/superpowers/
+
 # os / editor cruft
 .DS_Store
 *.log
