@@ -38,15 +38,20 @@ Then STOP. No writes.
 issue** `skl-l1-digest`. GitLab always uses the labeled issue. Thread title `skl · L1 daily triage`,
 body carries `<!-- skl-l1-thread -->`. Cache its number in `l1_digest.thread_ref` after creation.
 
+> **If `l1_digest.thread_ref` is set in config, use it directly as the thread number (`NUM`, or
+> `IID` on GitLab) and SKIP the marker search / create step below — only search-or-create when
+> `thread_ref` is unset (first run).**
+
 ### GitHub — Discussion
 ```bash
-OWNER=…; NAME=…                     # from the remote
+OWNER=…; NAME=…                     # from the git remote
+export CATEGORY=…                   # from l1_digest.discussion_category (config)
 read RID DISCUSS CAT <<<"$(gh api graphql -f query='
   query($o:String!,$n:String!){repository(owner:$o,name:$n){
     id hasDiscussionsEnabled discussionCategories(first:25){nodes{id name}}}}' \
   -f o="$OWNER" -f n="$NAME" \
   -q '[.data.repository.id, (.data.repository.hasDiscussionsEnabled|tostring),
-       (.data.repository.discussionCategories.nodes[]|select(.name=="'"$CATEGORY"'").id)] | @tsv')"
+       (.data.repository.discussionCategories.nodes[]|select(.name==env.CATEGORY).id)] | @tsv')"
 # DISCUSS=false → fall through to the issue path.
 NUM=$(gh api graphql -f query='query($o:String!,$n:String!){repository(owner:$o,name:$n){
   discussions(first:50,orderBy:{field:CREATED_AT,direction:DESC}){nodes{number body}}}}' \
@@ -80,7 +85,7 @@ LAST_HASH=$(gh issue view "$NUM" --json comments -q '.comments[-1].body // ""' |
 IID=$(glab api "projects/:id/issues?labels=skl-l1-digest&state=opened&per_page=1" | jq -r '.[0].iid // ""')
 [ -z "$IID" ] && IID=$(glab api --method POST "projects/:id/issues" -f title="skl · L1 daily triage" \
   -f labels="skl-l1-digest" -f description=$'<!-- skl-l1-thread -->\nRolling L1 (report-only) triage digest.' | jq -r '.iid')
-LAST_HASH=$(glab api "projects/:id/issues/$IID/notes?sort=asc&per_page=100" | jq -r '[.[].body]|last // ""' \
+LAST_HASH=$(glab api "projects/:id/issues/$IID/notes?sort=desc&per_page=1" | jq -r '.[0].body // ""' \
   | grep -oE 'skl-l1:[0-9a-f]{12}' | tail -1)
 ```
 
